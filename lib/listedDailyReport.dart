@@ -47,7 +47,8 @@ class _ListedDailyReportState extends State<ListedDailyReport> {
       "SELECT SUM(sold_price) AS price_sum FROM sales",
     );
     setState(() {
-      totalMoney = response.first['price_sum'] ?? 0;
+      totalMoney = response.first['price_sum'] != null ?
+      response.first['price_sum'].toStringAsFixed(2) : "0";
     });
   }
 
@@ -152,7 +153,7 @@ class _ListedDailyReportState extends State<ListedDailyReport> {
                               style: TextStyle(fontSize: tableContentFontSize),
                             )),
                             DataCell(Text(
-                              row['price_sum'].toString(),
+                              row['price_sum'].toStringAsFixed(2),
                               textAlign: TextAlign.center,
                               style: TextStyle(fontSize: tableContentFontSize),
                             )),

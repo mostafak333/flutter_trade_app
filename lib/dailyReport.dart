@@ -45,11 +45,14 @@ class _DailyReportState extends State<DailyReport> {
       WHERE DATE(sales.created_at) = DATE('$date','localtime')
       ''');
     setState(() {
-      sellingPrice = response.first['selling_price'] ?? 0;
-      sellingPriceAfterObligation =  response.first['selling_price'] ?? 0 ;
-      wholesalePrice = response.first['wholesale_price'] ?? 0;
-      netProfit = response.first['net_profit'] ?? 0;
-      netProfitAfterObligation = response.first['net_profit'] ?? 0;
+      sellingPrice = response.first['selling_price'] != null ?
+      response.first['selling_price'].toStringAsFixed(2) : "0";
+      sellingPriceAfterObligation =  sellingPrice;
+      wholesalePrice = response.first['wholesale_price'] != null ?
+      response.first['wholesale_price'].toStringAsFixed(2) : "0";
+      netProfit = response.first['net_profit'] != null ?
+      response.first['net_profit'].toStringAsFixed(2) : "0";
+      netProfitAfterObligation = netProfit;
     });
   }
 
@@ -217,8 +220,14 @@ class _DailyReportState extends State<DailyReport> {
                             child: TextField(
                               onChanged: (value) {
                                 setState(() {
-                                  sellingPriceAfterObligation = sellingPrice - double.parse(value);
-                                  netProfitAfterObligation = netProfit- double.parse(value);
+                                  try {
+                                    sellingPriceAfterObligation = (double.parse(sellingPrice) - double.parse(value)).toStringAsFixed(2);
+                                    netProfitAfterObligation = (double.parse(netProfit) - double.parse(value)).toStringAsFixed(2);
+                                  } catch (e) {
+                                    // Handle the exception here, for example, set a default value
+                                    sellingPriceAfterObligation = double.parse(sellingPrice) - 0.0;
+                                    netProfitAfterObligation = double.parse(netProfit) - 0.0;
+                                  }
                                 });
                               },
                               decoration: const InputDecoration(
@@ -254,8 +263,6 @@ class _DailyReportState extends State<DailyReport> {
                                 fontSize: tableContentFontSize,
                                 fontWeight: FontWeight.bold))),
                         DataCell(Text(
-                            netProfitAfterObligation != null
-                                ? netProfitAfterObligation.toStringAsFixed(2):
                             netProfitAfterObligation.toString(),
                             style: TextStyle(
                               fontSize: tableContentFontSize,
