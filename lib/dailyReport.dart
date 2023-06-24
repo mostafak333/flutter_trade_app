@@ -45,11 +45,11 @@ class _DailyReportState extends State<DailyReport> {
       WHERE DATE(sales.created_at) = DATE('$date','localtime')
       ''');
     setState(() {
-      sellingPrice = response.first['selling_price'];
-      sellingPriceAfterObligation =  response.first['selling_price'];
-      wholesalePrice = response.first['wholesale_price'];
-      netProfit = response.first['net_profit'];
-      netProfitAfterObligation = response.first['net_profit'];
+      sellingPrice = response.first['selling_price'] ?? 0;
+      sellingPriceAfterObligation =  response.first['selling_price'] ?? 0 ;
+      wholesalePrice = response.first['wholesale_price'] ?? 0;
+      netProfit = response.first['net_profit'] ?? 0;
+      netProfitAfterObligation = response.first['net_profit'] ?? 0;
     });
   }
 
@@ -178,9 +178,7 @@ class _DailyReportState extends State<DailyReport> {
                                 fontSize: tableTitleFontSize,
                                 fontWeight: FontWeight.bold))),
                         DataCell(Text(
-                            sellingPrice.toString() != 'null'
-                                ? sellingPrice.toString()
-                                : '0',
+                            sellingPrice.toString(),
                             style: TextStyle(
                               fontSize: tableContentFontSize,
                             ))),
@@ -191,9 +189,7 @@ class _DailyReportState extends State<DailyReport> {
                                 fontSize: tableContentFontSize,
                                 fontWeight: FontWeight.bold))),
                         DataCell(Text(
-                            wholesalePrice.toString() != 'null'
-                                ? wholesalePrice.toString()
-                                : '0',
+                            wholesalePrice.toString(),
                             style: TextStyle(
                               fontSize: tableContentFontSize,
                             ))),
@@ -204,9 +200,7 @@ class _DailyReportState extends State<DailyReport> {
                                 fontSize: tableContentFontSize,
                                 fontWeight: FontWeight.bold))),
                         DataCell(Text(
-                            netProfit.toString() != 'null'
-                                ? netProfit.toString()
-                                : '0',
+                            netProfit.toString(),
                             style: TextStyle(
                               fontSize: tableContentFontSize,
                             ))),
