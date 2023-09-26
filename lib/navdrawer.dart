@@ -111,13 +111,13 @@ class _NavDrawerState extends State<NavDrawer> {
                   builder: (context) => const MonthlyReport()));
             },
           ),
-          ListTile(
+          /*ListTile(
             leading: const Icon(Icons.input),
             title: const Text('Drop DB'),
             onTap: () async {
               await sqlDb.dropDataBase();
             },
-          ),
+          ),*/
           ListTile(
             leading: const Icon(Icons.input),
             title: Text("language".tr().toString()),

@@ -198,17 +198,17 @@ class _HomeState extends State<Home> {
         child: Text(product['name'].toString()),
       ));
     }
-    List<Widget> rows = [];
-    for (var i = 0; i < buttons.length; i += 4) {
+    /*List<Widget> rows = [];
+    for (var i = 0; i < buttons.length; i++) {
       List<Widget> rowChildren = [];
-      for (var j = i; j < i + 4 && j < buttons.length; j++) {
-        rowChildren.add(buttons[j]);
-      }
+
+        rowChildren.add(buttons[i]);
+
       rows.add(Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: rowChildren,
       ));
-    }
+    }*/
     return Scaffold(
       drawer: NavDrawer(),
       appBar: AppBar(
@@ -217,92 +217,99 @@ class _HomeState extends State<Home> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          ...rows,
+          Wrap(
+            spacing: 8.0, // Adjust the spacing between buttons as needed
+            alignment: WrapAlignment.spaceEvenly, // Align buttons to the start of each line
+            children: buttons,
+          ),
           const SizedBox(height: 16.0),
           Expanded(
             child: SingleChildScrollView(
               scrollDirection: Axis.vertical,
-              child: Card(
-                  margin: const EdgeInsets.all(paddingSize),
-                  color: tableHeaderTitleColor,
-                  shadowColor: shadowColor,
-                  elevation: 2,
-                  child: DataTable(
-                    headingRowColor: MaterialStateColor.resolveWith(
-                        (states) => tableHeaderColor),
-                    columns: [
-                      DataColumn(
-                          label: Text(
-                        "name".tr().toString(),
-                        style: TextStyle(
-                            fontSize: tableTitleFontSize,
-                            fontWeight: FontWeight.bold,
-                            color: tableHeaderTitleColor),
-                      )),
-                      DataColumn(
-                          label: Text(
-                        "selling_price".tr().toString(),
-                        style: TextStyle(
-                            fontSize: tableTitleFontSize,
-                            fontWeight: FontWeight.bold,
-                            color: tableHeaderTitleColor),
-                      )),
-                      DataColumn(
-                          label: Text(
-                        'action'.tr().toString(),
-                        style: TextStyle(
-                            fontSize: tableTitleFontSize,
-                            fontWeight: FontWeight.bold,
-                            color: tableHeaderTitleColor),
-                      )),
-                    ],
-                    rows: [
-                      for (var sale in salesList)
-                        DataRow(cells: [
-                          DataCell(Text(
-                            sale['name'].toString(),
-                            style: TextStyle(fontSize: tableContentFontSize),
-                            textAlign: TextAlign.center,
-                          )),
-                          DataCell(Text(
-                            sale['sold_price'].toString(),
-                            style: TextStyle(fontSize: tableContentFontSize),
-                            textAlign: TextAlign.center,
-                          )),
-                          DataCell(
-                            Row(
-                              children: [
-                                IconButton(
-                                  onPressed: () async {
-                                    _validate = false;
-                                    _displayDeleteDialog(context, sale['id']);
-                                  },
-                                  icon: const Icon(Icons.delete),
-                                  color: deleteButtonColor,
-                                ),
-                                const VerticalDivider(
-                                  thickness: 0.7,
-                                  color: Colors.grey,
-                                  indent: 10,
-                                  endIndent: 10,
-                                  width: 5,
-                                ),
-                                IconButton(
-                                  alignment: Alignment.centerLeft,
-                                  onPressed: () async {
-                                    _validate = false;
-                                    _displayDialog(context, sale['id'],
-                                        sale['sold_price'].toString());
-                                  },
-                                  icon: const Icon(Icons.edit),
-                                  color: editButtonColor,
-                                ),
-                              ],
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Card(
+                    margin: const EdgeInsets.all(paddingSize),
+                    color: tableHeaderTitleColor,
+                    shadowColor: shadowColor,
+                    elevation: 2,
+                    child: DataTable(
+                      headingRowColor: MaterialStateColor.resolveWith(
+                          (states) => tableHeaderColor),
+                      columns: [
+                        DataColumn(
+                            label: Text(
+                          "name".tr().toString(),
+                          style: TextStyle(
+                              fontSize: tableTitleFontSize,
+                              fontWeight: FontWeight.bold,
+                              color: tableHeaderTitleColor),
+                        )),
+                        DataColumn(
+                            label: Text(
+                          "selling_price".tr().toString(),
+                          style: TextStyle(
+                              fontSize: tableTitleFontSize,
+                              fontWeight: FontWeight.bold,
+                              color: tableHeaderTitleColor),
+                        )),
+                        DataColumn(
+                            label: Text(
+                          'action'.tr().toString(),
+                          style: TextStyle(
+                              fontSize: tableTitleFontSize,
+                              fontWeight: FontWeight.bold,
+                              color: tableHeaderTitleColor),
+                        )),
+                      ],
+                      rows: [
+                        for (var sale in salesList)
+                          DataRow(cells: [
+                            DataCell(Text(
+                              sale['name'].toString(),
+                              style: TextStyle(fontSize: tableContentFontSize),
+                              textAlign: TextAlign.center,
+                            )),
+                            DataCell(Text(
+                              sale['sold_price'].toString(),
+                              style: TextStyle(fontSize: tableContentFontSize),
+                              textAlign: TextAlign.center,
+                            )),
+                            DataCell(
+                              Row(
+                                children: [
+                                  IconButton(
+                                    onPressed: () async {
+                                      _validate = false;
+                                      _displayDeleteDialog(context, sale['id']);
+                                    },
+                                    icon: const Icon(Icons.delete),
+                                    color: deleteButtonColor,
+                                  ),
+                                  const VerticalDivider(
+                                    thickness: 0.7,
+                                    color: Colors.grey,
+                                    indent: 10,
+                                    endIndent: 10,
+                                    width: 5,
+                                  ),
+                                  IconButton(
+                                    alignment: Alignment.centerLeft,
+                                    onPressed: () async {
+                                      _validate = false;
+                                      _displayDialog(context, sale['id'],
+                                          sale['sold_price'].toString());
+                                    },
+                                    icon: const Icon(Icons.edit),
+                                    color: editButtonColor,
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                        ]),
-                    ],
-                  )),
+                          ]),
+                      ],
+                    )),
+              ),
             ),
           ),
         ],

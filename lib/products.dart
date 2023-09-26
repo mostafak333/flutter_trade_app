@@ -114,7 +114,7 @@ class _ProductsState extends State<Products> {
                         productNameController.text.toString(),
                         wholesalePriceController.text,
                         salePriceController.text,
-                        null);
+                        0);
                   }
                   Navigator.of(context).pop();
                 }
