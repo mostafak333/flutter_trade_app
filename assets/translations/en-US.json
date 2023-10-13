@@ -38,5 +38,6 @@
     "locked": "Locked",
     "unlocked": "Unlocked",
     "status": "Status",
-    "obligations_value": "Obligations Value"
+    "obligations_value": "Obligations Value",
+    "backup_data": "Backup Data",
 }

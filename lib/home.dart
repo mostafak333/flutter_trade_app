@@ -26,7 +26,7 @@ class _HomeState extends State<Home> {
   double tableContentFontSize = Constants.tableContentFontSize;
   double tableTitleFontSize = Constants.tableTitleFontSize;
   static const double paddingSize = Constants.padding;
-
+  String pickedDateValue = DateFormat('yyyy-MM-dd').format(DateTime.now()).toString();
   @override
   void initState() {
     super.initState();
@@ -50,7 +50,7 @@ class _HomeState extends State<Home> {
     SELECT sales.id as id, products.name as name, sales.sold_price
     FROM sales
     INNER JOIN products ON sales.product_id = products.id
-    WHERE DATE(sales.created_at) = Date('now','localtime')
+    WHERE DATE(sales.created_at) = '$pickedDateValue'
     ORDER BY sales.id DESC
     ''');
     setState(() {
@@ -58,9 +58,9 @@ class _HomeState extends State<Home> {
     });
   }
 
-  void storeSale(id, price) async {
+  void storeSale(id, price, date) async {
     int response = await sqlDb.insertData(
-        "INSERT INTO 'sales' ('product_id','sold_price') VALUES ('$id','$price')");
+        "INSERT INTO 'sales' ('product_id','sold_price',created_at) VALUES ('$id','$price','$date')");
     if (response > 0) {
       fetchSalesList();
     }
@@ -186,6 +186,23 @@ class _HomeState extends State<Home> {
         });
   }
 
+  Future<void> _selectDate(BuildContext context) async {
+    DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now(),
+    );
+
+    if (pickedDate != null && pickedDate != DateTime.now()) {
+      // Do something with the selected date
+      setState(() {
+        pickedDateValue = pickedDate.toString().substring(0,10);
+        fetchSalesList();
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     List<Widget> buttons = [];
@@ -193,7 +210,7 @@ class _HomeState extends State<Home> {
       buttons.add(ElevatedButton(
         onPressed: () async {
           fetchSalesList();
-          storeSale(product['id'].toString(), product['salePrice']);
+          storeSale(product['id'].toString(), product['salePrice'],pickedDateValue);
         },
         child: Text(product['name'].toString()),
       ));
@@ -213,6 +230,21 @@ class _HomeState extends State<Home> {
       drawer: NavDrawer(),
       appBar: AppBar(
         title: Text("home".tr().toString()),
+        actions: [
+          TextButton(
+            onPressed: () {
+              _selectDate(context);
+            },
+            child: Text(
+              pickedDateValue,
+              style: TextStyle(
+                  fontSize: tableTitleFontSize,
+                  fontWeight: FontWeight.bold,
+                  color: tableHeaderTitleColor
+              ),
+            ),
+          )
+        ],
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -223,13 +255,49 @@ class _HomeState extends State<Home> {
             children: buttons,
           ),
           const SizedBox(height: 16.0),
+          salesList.isEmpty?  Expanded(
+            child: Card(
+                color: tableHeaderTitleColor,
+                shadowColor: shadowColor,
+                elevation: 2,
+                child: DataTable(
+                  headingRowColor: MaterialStateColor.resolveWith(
+                          (states) => tableHeaderColor),
+                  columns: [
+                    DataColumn(
+                        label: Text(
+                          "name".tr().toString(),
+                          style: TextStyle(
+                              fontSize: tableTitleFontSize,
+                              fontWeight: FontWeight.bold,
+                              color: tableHeaderTitleColor),
+                        )),
+                    DataColumn(
+                        label: Text(
+                          "selling_price".tr().toString(),
+                          style: TextStyle(
+                              fontSize: tableTitleFontSize,
+                              fontWeight: FontWeight.bold,
+                              color: tableHeaderTitleColor),
+                        )),
+                    DataColumn(
+                        label: Text(
+                          'action'.tr().toString(),
+                          style: TextStyle(
+                              fontSize: tableTitleFontSize,
+                              fontWeight: FontWeight.bold,
+                              color: tableHeaderTitleColor),
+                        )),
+                  ],
+                  rows: [],
+                )),
+          ) :
           Expanded(
             child: SingleChildScrollView(
               scrollDirection: Axis.vertical,
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Card(
-                    margin: const EdgeInsets.all(paddingSize),
                     color: tableHeaderTitleColor,
                     shadowColor: shadowColor,
                     elevation: 2,

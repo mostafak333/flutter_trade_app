@@ -38,5 +38,6 @@
   "locked": "مغلق",
   "unlocked": "متاح",
   "status": "الحالة",
-  "obligations_value": "قيمة الالتزامات"
+  "obligations_value": "قيمة الالتزامات",
+  "backup_data": "نسخ إحتياطي للبيانات",
 }
