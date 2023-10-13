@@ -25,16 +25,13 @@ class _DailyReportState extends State<DailyReport> {
   double tableContentFontSize = Constants.tableContentFontSize;
   double tableTitleFontSize = Constants.tableTitleFontSize;
   static const double paddingSize = Constants.padding;
-  String lastDateValue =
-      DateFormat('yyyy-MM-dd').format(DateTime.now()).toString();
-  DateTime todayDate = DateTime.now();
+  String pickedDateValue = DateFormat('yyyy-MM-dd').format(DateTime.now()).toString();
 
   @override
   void initState() {
     super.initState();
-    fetchDatesFromDBForDatePicker();
-    getSellingProductFormDate(lastDateValue);
-    getIMoneyData(lastDateValue);
+    getSellingProductFormDate(pickedDateValue);
+    getIMoneyData(pickedDateValue);
   }
 
   void getIMoneyData(date) async {
@@ -71,42 +68,19 @@ class _DailyReportState extends State<DailyReport> {
     });
   }
 
-  void fetchDatesFromDBForDatePicker() async {
-    var response = await sqlDb.readData('''
-    SELECT created_at AS all_dates FROM sales
-    ''');
-    setState(() {
-      if (response.isEmpty) {
-        lastDateValue = (todayDate.toString()).substring(0, 10);
-      } else {
-        dates = response
-            .map<DateTime>((date) => DateTime.parse(date['all_dates']))
-            .toList();
-        lastDateValue = (dates.last.toString()).substring(0, 10);
-      }
-    });
-  }
-
   Future<void> _showDatePicker(BuildContext context) async {
     final DateTime? pickedDate = await showDatePicker(
       context: context,
-      initialDate: dates.isNotEmpty ? dates.last : todayDate,
-      // Use the selectedDate as the initial date
-      firstDate: dates.isNotEmpty ? dates.first : todayDate,
-      // Set the desired range of dates
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2023),
       lastDate: DateTime.now(),
     );
 
-    if (pickedDate != null) {
       setState(() {
-        if (dates.isNotEmpty) {
-          dates.last = pickedDate;
-          lastDateValue = (dates.last.toString()).substring(0, 10);
-          getIMoneyData(lastDateValue);
-          getSellingProductFormDate(lastDateValue);
-        }
-      });
-    }
+        pickedDateValue = pickedDate.toString().substring(0,10);
+        getIMoneyData(pickedDateValue);
+          getSellingProductFormDate(pickedDateValue);
+        });
   }
 
   @override
@@ -167,7 +141,7 @@ class _DailyReportState extends State<DailyReport> {
                               _showDatePicker(context);
                             },
                             child: Text(
-                              lastDateValue,
+                              pickedDateValue,
                               style: TextStyle(
                                 fontSize: tableContentFontSize,
                               ),
