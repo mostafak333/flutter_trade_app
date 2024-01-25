@@ -11,5 +11,6 @@ class Constants {
   static Color white = Colors.white;
   static Color lightGreen = Colors.lightGreen;
   static Color lightBlue = const Color(0xFFBBDEFB);
+  static Color green = Colors.green;
 
 }

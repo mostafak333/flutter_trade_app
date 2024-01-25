@@ -39,5 +39,13 @@
   "unlocked": "متاح",
   "status": "الحالة",
   "obligations_value": "قيمة الالتزامات",
-  "backup_data": "نسخ إحتياطي للبيانات"
+  "backup_data": "نسخ إحتياطي للبيانات",
+  "quantity": "الكمية",
+  "enter_quantity": "أدخل الكمية",
+  "inventory": "المخزن",
+  "increase_display_quantity": "زيادة كمية العرض",
+  "increase_inventory_quantity": "زيادة كمية المخزن",
+  "display_quantity": "كمية العرض",
+  "inventory_quantity": "كمية المخزن",
+  "invalid_quantity": "لا يمكن نقل الكمية"
 }

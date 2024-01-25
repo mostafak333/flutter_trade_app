@@ -37,7 +37,7 @@ class _HomeState extends State<Home> {
   void fetchProductList() async {
     List<Map> response = await sqlDb.readData('''
         SELECT * FROM 'products' 
-        WHERE locked <> 1
+        WHERE locked <> 1 AND display_quantity > 0
         ORDER BY id DESC 
         ''');
     setState(() {
@@ -47,7 +47,7 @@ class _HomeState extends State<Home> {
 
   void fetchSalesList() async {
     List<Map> response = await sqlDb.readData('''
-    SELECT sales.id as id, products.name as name, sales.sold_price
+    SELECT sales.id as id, products.name as name, sales.sold_price, products.id as product_id
     FROM sales
     INNER JOIN products ON sales.product_id = products.id
     WHERE DATE(sales.created_at) = '$pickedDateValue'
@@ -63,6 +63,7 @@ class _HomeState extends State<Home> {
         "INSERT INTO 'sales' ('product_id','sold_price',created_at) VALUES ('$id','$price','$date')");
     if (response > 0) {
       fetchSalesList();
+      fetchProductList();
     }
   }
 
@@ -74,12 +75,19 @@ class _HomeState extends State<Home> {
   }
 
   void update(id, price) async {
-    int response = await sqlDb
-        .updateData("UPDATE sales SET sold_price = '$price' WHERE id = $id");
+    int response = await sqlDb.updateData("UPDATE sales SET sold_price = '$price' WHERE id = $id");
     if (response > 0) {
       fetchSalesList();
     }
   }
+  void updateProductQuantity(int id, bool increase) async {
+    String operator = increase ? '+' : '-'; // Use + for increase, - for decrease
+    int response = await sqlDb.updateData("UPDATE products SET display_quantity = display_quantity $operator 1 WHERE id = $id");
+    if (response > 0) {
+      fetchSalesList();
+    }
+  }
+
 
   _displayDialog(BuildContext context, $id, $Price) async {
     TextEditingController salePriceController =
@@ -135,7 +143,7 @@ class _HomeState extends State<Home> {
         });
   }
 
-  _displayDeleteDialog(BuildContext context, $id) async {
+  _displayDeleteDialog(BuildContext context, $saleRow) async {
     return showDialog(
         context: context,
         builder: (context) {
@@ -152,7 +160,8 @@ class _HomeState extends State<Home> {
                 child: Text("ok".tr().toString()),
                 onPressed: () {
                   if (text.text == 'sure'.tr().toString()) {
-                    delete($id);
+                    delete($saleRow['id']);
+                    updateProductQuantity($saleRow['product_id'],true);
                     Navigator.of(context).pop();
                   } else if (text.text != 'sure'.tr().toString()) {
                     setState(() {
@@ -211,6 +220,7 @@ class _HomeState extends State<Home> {
         onPressed: () async {
           fetchSalesList();
           storeSale(product['id'].toString(), product['salePrice'],pickedDateValue);
+          updateProductQuantity(product['id'],false);
         },
         child: Text(product['name'].toString()),
       ));
@@ -349,7 +359,7 @@ class _HomeState extends State<Home> {
                                   IconButton(
                                     onPressed: () async {
                                       _validate = false;
-                                      _displayDeleteDialog(context, sale['id']);
+                                      _displayDeleteDialog(context, sale);
                                     },
                                     icon: const Icon(Icons.delete),
                                     color: deleteButtonColor,

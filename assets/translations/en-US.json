@@ -36,8 +36,16 @@
     "can_not_be_empty": "Can't Be Empty",
     "data":"Data",
     "locked": "Locked",
-    "unlocked": "Unlocked",
+    "unlocked": "Available",
     "status": "Status",
     "obligations_value": "Obligations Value",
-    "backup_data": "Backup Data"
+    "backup_data": "Backup Data",
+    "quantity": "Quantity",
+    "enter_quantity": "Enter Quantity",
+    "inventory": "Inventory",
+    "increase_display_quantity": "Increase Shop",
+    "increase_inventory_quantity": "Increase Stock",
+    "display_quantity": "Shop Quantity",
+    "inventory_quantity": "Stock Quantity",
+    "invalid_quantity": "Invalid Quantity"
 }

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "140000492127",
+    "project_id": "farsha-401914",
+    "storage_bucket": "farsha-401914.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:140000492127:android:ac7a6ec7df0b9036f4b9ea",
+        "android_client_info": {
+          "package_name": "com.example.alfarsha"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCf-9BosPpBI8hbBBm6-P80_nYWUjVFsaM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

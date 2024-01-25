@@ -31,12 +31,12 @@ class _ListedDailyReportState extends State<ListedDailyReport> {
   }
 
   void fetchListDailyReport() async {
-    List<Map> response =
-        await sqlDb.readData("SELECT count(product_id) as products_count,"
-            "sum(sold_price) as price_sum,"
-            "DATE(created_at) as date"
-            " FROM sales"
-            " GROUP BY DATE(created_at);");
+    List<Map> response = await sqlDb.readData('''
+          SELECT COUNT(product_id) AS products_count, SUM(sold_price) AS price_sum, DATE(created_at) AS date
+          FROM sales
+          GROUP BY DATE(created_at)
+          ORDER BY DATE(created_at) DESC;
+          ''');
     setState(() {
       reportList = response;
     });
@@ -47,8 +47,9 @@ class _ListedDailyReportState extends State<ListedDailyReport> {
       "SELECT SUM(sold_price) AS price_sum FROM sales",
     );
     setState(() {
-      totalMoney = response.first['price_sum'] != null ?
-      response.first['price_sum'].toStringAsFixed(2) : "0";
+      totalMoney = response.first['price_sum'] != null
+          ? response.first['price_sum'].toStringAsFixed(2)
+          : "0";
     });
   }
 

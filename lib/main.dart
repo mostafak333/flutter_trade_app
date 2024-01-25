@@ -1,5 +1,6 @@
 import 'package:alfarsha/dailyReport.dart';
 import 'package:alfarsha/home.dart';
+import 'package:alfarsha/inventory.dart';
 import 'package:alfarsha/listedDailyReport.dart';
 import 'package:alfarsha/monthlyReport.dart';
 import 'package:alfarsha/products.dart';
@@ -37,6 +38,7 @@ class MyApp extends StatelessWidget {
         '/report': (context) => const ListedDailyReport(),
         '/daily-report': (context) => const DailyReport(),
         '/monthly-report': (context) => const MonthlyReport(),
+        '/inventory': (context) => const Inventory(),
       },
     );
   }

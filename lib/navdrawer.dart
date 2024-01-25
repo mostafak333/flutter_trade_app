@@ -1,5 +1,6 @@
 // ignore_for_file: library_private_types_in_public_api
 
+import 'package:alfarsha/inventory.dart';
 import 'package:alfarsha/monthlyReport.dart';
 import 'package:alfarsha/products.dart';
 import 'package:alfarsha/listedDailyReport.dart';
@@ -120,11 +121,20 @@ class _NavDrawerState extends State<NavDrawer> {
           ),*/
           ListTile(
             leading: const Icon(Icons.input),
+            title: Text("inventory".tr().toString()),
+            onTap: () {
+              Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => const Inventory()));
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.input),
             title: Text("language".tr().toString()),
             onTap: () async {
               _displayLanguageDialog(context);
             },
           ),
+
         ],
       ),
     );

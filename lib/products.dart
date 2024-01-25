@@ -18,6 +18,7 @@ class _ProductsState extends State<Products> {
   bool _nameValidate = false;
   bool _wholesalePriceValidate = false;
   bool _salePriceValidate = false;
+  bool _displayQuantityValidate = false;
   bool _deleteValidate = false;
   Color tableHeaderColor = Constants.tableHeaderColor;
   Color tableHeaderTitleColor = Constants.white;
@@ -47,22 +48,23 @@ class _ProductsState extends State<Products> {
     }
   }
 
-  void store(name, wholesalePrice, salePrice) async {
+  void store(name, wholesalePrice, salePrice, quantity) async {
     int response = await sqlDb.insertData('''
-    INSERT INTO 'products' ('name','wholesalePrice','salePrice') 
-    VALUES ('$name','$wholesalePrice',$salePrice)
+    INSERT INTO 'products' ('name','wholesalePrice','salePrice','display_quantity') 
+    VALUES ('$name','$wholesalePrice',$salePrice,$quantity)
     ''');
     if (response > 0) {
       fetchProductList();
     }
   }
 
-  void update(id, name, wholesalePrice, salePrice, locked) async {
+  void update(id, name, wholesalePrice, salePrice,quantity, locked) async {
     int response = await sqlDb.updateData('''
         UPDATE products 
         SET name = '$name',
         wholesalePrice = $wholesalePrice,
         salePrice = $salePrice,
+        display_quantity = $quantity,
         locked = $locked 
         WHERE id = $id
         ''');
@@ -71,14 +73,16 @@ class _ProductsState extends State<Products> {
     }
   }
 
-  _displayDialog(BuildContext context, $id, $name, $wholesalePrice, $salePrice,
+  _displayDialog(BuildContext context, $id, $name, $wholesalePrice, $salePrice, $quantity,
       $flag) async {
     TextEditingController productNameController =
         TextEditingController(text: $name);
     TextEditingController wholesalePriceController =
         TextEditingController(text: $wholesalePrice);
     TextEditingController salePriceController =
-        TextEditingController(text: $salePrice);
+      TextEditingController(text: $salePrice);
+    TextEditingController quantityController =
+      TextEditingController(text: $quantity);
 
     return showDialog(
         context: context,
@@ -107,13 +111,16 @@ class _ProductsState extends State<Products> {
                     store(
                         productNameController.text.toString(),
                         wholesalePriceController.text,
-                        salePriceController.text);
+                        salePriceController.text,
+                        quantityController.text,
+                    );
                   } else {
                     update(
                         $id,
                         productNameController.text.toString(),
                         wholesalePriceController.text,
                         salePriceController.text,
+                        quantityController.text,
                         0);
                   }
                   Navigator.of(context).pop();
@@ -156,6 +163,16 @@ class _ProductsState extends State<Products> {
                       ),
                       keyboardType: TextInputType.number,
                     ),
+                    TextField(
+                      controller: quantityController,
+                      decoration: InputDecoration(
+                        hintText: "enter_quantity".tr().toString(),
+                        errorText: _displayQuantityValidate
+                            ? "can_not_be_empty".tr().toString()
+                            : null,
+                      ),
+                      keyboardType: TextInputType.number,
+                    ),
                   ],
                 ),
               ),
@@ -169,13 +186,16 @@ class _ProductsState extends State<Products> {
   }
 
   _displayLockDialog(BuildContext context, $id, $name, $wholesalePrice,
-      $salePrice, $locked) async {
+      $salePrice,$quantity, $locked) async {
     TextEditingController productNameController =
         TextEditingController(text: $name);
     TextEditingController wholesalePriceController =
         TextEditingController(text: $wholesalePrice);
     TextEditingController salePriceController =
         TextEditingController(text: $salePrice);
+    TextEditingController quantityController =
+    TextEditingController(text: $quantity);
+
     return showDialog(
         context: context,
         builder: (context) {
@@ -197,6 +217,7 @@ class _ProductsState extends State<Products> {
                         productNameController.text.toString(),
                         wholesalePriceController.text,
                         salePriceController.text,
+                        quantityController.text,
                         $locked == 1 ? 0 : 1);
                     Navigator.of(context).pop();
                   } else if (text.text != 'sure'.tr().toString()) {
@@ -256,7 +277,7 @@ class _ProductsState extends State<Products> {
               children: [
                 ElevatedButton(
                   onPressed: () async {
-                    _displayDialog(context, null, null, null, null, 'store');
+                    _displayDialog(context, null, null, null, null,null, 'store');
                   },
                   child: Text("add_product".tr().toString()),
                 ),
@@ -303,6 +324,14 @@ class _ProductsState extends State<Products> {
                           )),
                           DataColumn(
                               label: Text(
+                                "display_quantity".tr().toString(),
+                                style: TextStyle(
+                                    fontSize: tableTitleFontSize,
+                                    fontWeight: FontWeight.bold,
+                                    color: tableHeaderTitleColor),
+                              )),
+                          DataColumn(
+                              label: Text(
                             "status".tr().toString(),
                             style: TextStyle(
                                 fontSize: tableTitleFontSize,
@@ -340,6 +369,12 @@ class _ProductsState extends State<Products> {
                                     TextStyle(fontSize: tableContentFontSize),
                               )),
                               DataCell(Text(
+                                product['display_quantity'].toString(),
+                                textAlign: TextAlign.center,
+                                style:
+                                TextStyle(fontSize: tableContentFontSize),
+                              )),
+                              DataCell(Text(
                                 product['locked'] == 1
                                     ? "locked".tr().toString()
                                     : "unlocked".tr().toString(),
@@ -365,6 +400,7 @@ class _ProductsState extends State<Products> {
                                               product['wholesalePrice']
                                                   .toString(),
                                               product['salePrice'].toString(),
+                                              product['display_quantity'].toString(),
                                               'update');
                                         },
                                         icon: const Icon(Icons.edit),
@@ -393,6 +429,7 @@ class _ProductsState extends State<Products> {
                                             product['wholesalePrice']
                                                 .toString(),
                                             product['salePrice'].toString(),
+                                            product['display_quantity'].toString(),
                                             product['locked']);
                                       },
                                       icon: Icon(product['locked'] == 1
