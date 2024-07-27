@@ -47,5 +47,18 @@
   "increase_inventory_quantity": "زيادة كمية المخزن",
   "display_quantity": "كمية العرض",
   "inventory_quantity": "كمية المخزن",
-  "invalid_quantity": "لا يمكن نقل الكمية"
+  "invalid_quantity": "لا يمكن نقل الكمية",
+  "logout": "تسجيل الخروج",
+  "login": "تسجل الدخول",
+  "create_project": "انشاء مشروع جديد",
+  "create": "انشاء",
+  "project_name": "اسم المشروع",
+  "password": "كلمة المرور",
+  "enter_project_name": "من فضلك ادخل اسم المشروع",
+  "enter_password": "من فضلك ادخل كلمة المرور",
+  "invalid_project_name_password":"خطأ في اسم المشروع او كلمة المرور",
+  "project_created_successfully": "تم انشاء مشروع جديد بنجاح",
+  "fail_create_project": "خطأ في انشاء مشروع جديد",
+  "upload_image": "اضافة صورة"
+
 }

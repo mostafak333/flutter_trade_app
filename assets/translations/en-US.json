@@ -47,5 +47,17 @@
     "increase_inventory_quantity": "Increase Stock",
     "display_quantity": "Shop Quantity",
     "inventory_quantity": "Stock Quantity",
-    "invalid_quantity": "Invalid Quantity"
+    "invalid_quantity": "Invalid Quantity",
+    "logout": "Logout",
+    "login": "Login",
+    "create_project": "Create New Project",
+    "create": "Create",
+    "project_name": "Project name",
+    "password": "Password",
+    "enter_project_name": "Please enter project name",
+    "enter_password": "Please enter password",
+    "invalid_project_name_password": "Invalid project name or password",
+    "project_created_successfully": "Project created successfully",
+    "fail_create_project": "Fail while creating project",
+    "upload_image": "Upload image"
 }

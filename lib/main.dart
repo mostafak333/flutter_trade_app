@@ -2,8 +2,10 @@ import 'package:alfarsha/dailyReport.dart';
 import 'package:alfarsha/home.dart';
 import 'package:alfarsha/inventory.dart';
 import 'package:alfarsha/listedDailyReport.dart';
+import 'package:alfarsha/login.dart';
 import 'package:alfarsha/monthlyReport.dart';
 import 'package:alfarsha/products.dart';
+import 'package:alfarsha/register.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 
@@ -33,12 +35,14 @@ class MyApp extends StatelessWidget {
       locale: context.locale,
       title: 'My App',
       routes: {
+        '/login': (context) => const LoginPage(), // Set LoginPage as the initial route
         '/': (context) => const Home(),
         '/products': (context) => Products(),
         '/report': (context) => const ListedDailyReport(),
         '/daily-report': (context) => const DailyReport(),
         '/monthly-report': (context) => const MonthlyReport(),
         '/inventory': (context) => const Inventory(),
+        '/create-project': (context) => const RegisterPage(), // Add the register route
       },
     );
   }
