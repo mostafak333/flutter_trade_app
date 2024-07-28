@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'sqldb.dart';
 import 'navdrawer.dart';
 import 'constants.dart';
@@ -30,14 +31,24 @@ class _HomeState extends State<Home> {
   @override
   void initState() {
     super.initState();
+    _loadUserInfo();
     fetchProductList();
     fetchSalesList();
-  }
 
+  }
+  int? _projectId;
+  Future<void> _loadUserInfo() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _projectId = prefs.getInt('project_id');
+    });
+  }
   void fetchProductList() async {
     List<Map> response = await sqlDb.readData('''
         SELECT * FROM 'products' 
-        WHERE locked <> 1 AND display_quantity > 0
+        WHERE locked <> 1 
+        AND display_quantity > 0 
+        AND project_id = $_projectId
         ORDER BY id DESC 
         ''');
     setState(() {
@@ -50,7 +61,9 @@ class _HomeState extends State<Home> {
     SELECT sales.id as id, products.name as name, sales.sold_price, products.id as product_id
     FROM sales
     INNER JOIN products ON sales.product_id = products.id
-    WHERE DATE(sales.created_at) = '$pickedDateValue'
+    WHERE sales.project_id = $_projectId
+    AND products.project_id = $_projectId
+    AND DATE(sales.created_at) = '$pickedDateValue'
     ORDER BY sales.id DESC
     ''');
     setState(() {
@@ -60,7 +73,7 @@ class _HomeState extends State<Home> {
 
   void storeSale(id, price, date) async {
     int response = await sqlDb.insertData(
-        "INSERT INTO 'sales' ('product_id','sold_price',created_at) VALUES ('$id','$price','$date')");
+        "INSERT INTO 'sales' ('product_id','project_id','sold_price',created_at) VALUES ('$id','$_projectId','$price','$date')");
     if (response > 0) {
       fetchSalesList();
       fetchProductList();

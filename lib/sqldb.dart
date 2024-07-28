@@ -18,13 +18,13 @@ class SqlDb {
     String path = join(databasePath, 'business.db');
     //print("DB path ==> " + path);
     Database myDb = await openDatabase(path,
-        onCreate: _onCreate, version: 5, onUpgrade: _onUpgrade);
+        onCreate: _onCreate, version: 6, onUpgrade: _onUpgrade);
     return myDb;
   }
 
   _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 4) {
-      await _updateProductTable(db);
+    //  await _updateProductTable(db);
     }
 
     // Add more migration logic for other versions as needed
@@ -50,6 +50,8 @@ class SqlDb {
       "salePrice" DECIMAL(10,2) NOT NULL,
       "locked" INTEGER DEFAULT 0,
       "quantity" INTEGER DEFAULT 0,
+      "display_quantity" INTEGER DEFAULT 0,
+      "inventory_quantity" INTEGER DEFAULT 0,
       "created_at" timestamp DATE DEFAULT (datetime('now','localtime')),
       FOREIGN KEY (project_id) REFERENCES projects(id)
     )
@@ -70,7 +72,7 @@ class SqlDb {
     //print("<=== Create Database And Tables ===>");
   }
 
-  Future<void> _updateProductTable(Database db) async {
+/*  Future<void> _updateProductTable(Database db) async {
     await db.execute('''
     ALTER TABLE "products"
     ADD COLUMN "display_quantity" INTEGER DEFAULT 0;
@@ -78,9 +80,9 @@ class SqlDb {
 
     await db.execute('''
     ALTER TABLE "products"
-    ADD COLUMN "inventory_quantity" INTEGER DEFAULT 0;
+    ADD COLUMN
     ''');
-  }
+  }*/
 
   readData(String sql) async {
     Database? myDb = await db;
@@ -113,17 +115,16 @@ class SqlDb {
     //print("<=== Drop Database ===>");
   }
 
-  Future<Map<String, dynamic>?> authenticateProject(
-      String name, String password) async {
-    Database? myDb = await db;
-    List<Map<String, dynamic>> result = await myDb!.rawQuery('''
-      SELECT * FROM projects WHERE name = ? AND password = ?
-    ''', [name, password]);
-
+  Future<Map<String, dynamic>?> authenticateProject(String name, String password) async {
+    var dbClient = await db;
+    List<Map> result = await dbClient!.query(
+      'projects',
+      where: 'name = ? AND password = ?',
+      whereArgs: [name, password],
+    );
     if (result.isNotEmpty) {
-      return Map<String, dynamic>.from(result.first);
-    } else {
-      return null;
+      return result.first as Map<String, dynamic>;
     }
+    return null;
   }
 }

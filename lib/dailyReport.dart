@@ -3,6 +3,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:alfarsha/home.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'constants.dart';
 import 'sqldb.dart';
 
@@ -30,16 +31,25 @@ class _DailyReportState extends State<DailyReport> {
   @override
   void initState() {
     super.initState();
+    _loadUserInfo();
     getSellingProductFormDate(pickedDateValue);
     getIMoneyData(pickedDateValue);
   }
-
+  int? _projectId;
+  Future<void> _loadUserInfo() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _projectId = prefs.getInt('project_id');
+    });
+  }
   void getIMoneyData(date) async {
     var response = await sqlDb.readData('''
       SELECT sum(sold_price) AS selling_price, sum(products.wholesalePrice) AS wholesale_price ,sum(sold_price)- sum(products.wholesalePrice)as net_profit
       FROM sales
       INNER JOIN products ON sales.product_id = products.id 
       WHERE DATE(sales.created_at) = DATE('$date','localtime')
+      AND sales.project_id = $_projectId
+      AND products.project_id = $_projectId
       ''');
     setState(() {
       sellingPrice = response.first['selling_price'] != null ?
@@ -59,7 +69,9 @@ class _DailyReportState extends State<DailyReport> {
         COUNT() AS number_of_selling
         FROM sales 
         INNER JOIN products ON sales.product_id = products.id 
-        WHERE DATE(sales.created_at) = Date('$date','localtime') 
+         WHERE sales.project_id = $_projectId
+            AND products.project_id = $_projectId
+            AND DATE(sales.created_at) = DATE('$date', 'localtime') 
         GROUP BY product_id 
         ORDER BY number_of_selling DESC
         ''');

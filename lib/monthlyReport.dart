@@ -4,6 +4,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:alfarsha/home.dart';
 import 'package:flutter/material.dart';
 import 'package:month_picker_dialog/month_picker_dialog.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'constants.dart';
 import 'sqldb.dart';
 
@@ -37,16 +38,25 @@ class _MonthlyReportState extends State<MonthlyReport> {
     final locale = EasyLocalization.of(context)?.locale;
     languageCode = locale!.languageCode;
     monthName = DateFormat.MMMM(languageCode).format(dateValue).toString();
+    _loadUserInfo();
     getSellingProductFormDate(dateValue);
     getIMoneyData(dateValue);
-  }
 
+  }
+  int? _projectId;
+  Future<void> _loadUserInfo() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _projectId = prefs.getInt('project_id');
+    });
+  }
   void getIMoneyData(date) async {
     var response = await sqlDb.readData('''
       SELECT sum(sold_price) AS selling_price, sum(products.wholesalePrice) AS wholesale_price ,sum(sold_price)- sum(products.wholesalePrice)as net_profit
       FROM sales
       INNER JOIN products ON sales.product_id = products.id 
         WHERE strftime('%Y-%m', sales.created_at) = strftime('%Y-%m','$date','localtime')
+        AND sales.project_id = $_projectId
       ''');
     setState(() {
       sellingPrice = response.first['selling_price'] != null ?
@@ -67,6 +77,7 @@ class _MonthlyReportState extends State<MonthlyReport> {
         FROM sales 
         INNER JOIN products ON sales.product_id = products.id 
         WHERE strftime('%Y-%m', sales.created_at) = strftime('%Y-%m','$date','localtime')
+        AND sales.project_id = $_projectId
         GROUP BY product_id 
         ORDER BY number_of_selling DESC
         ''');

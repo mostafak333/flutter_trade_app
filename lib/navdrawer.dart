@@ -1,5 +1,6 @@
 // ignore_for_file: library_private_types_in_public_api
 
+import 'package:alfarsha/constants.dart';
 import 'package:alfarsha/home.dart';
 import 'package:alfarsha/inventory.dart';
 import 'package:alfarsha/login.dart';
@@ -10,6 +11,8 @@ import 'package:alfarsha/dailyReport.dart';
 import 'package:flutter/material.dart';
 import 'sqldb.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:io';
 
 class NavDrawer extends StatefulWidget {
   const NavDrawer({super.key});
@@ -22,6 +25,26 @@ class _NavDrawerState extends State<NavDrawer> {
   SqlDb sqlDb = SqlDb();
   List languageCode = ["en", "ar"];
   List countryCode = ["US", "SA"];
+  Color IconBlue = Constants.tableHeaderColor;
+
+  String? _projectName;
+  String? _imagePath;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserInfo();
+  }
+
+  int? _projectId;
+  Future<void> _loadUserInfo() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _projectName = prefs.getString('project_name');
+      _imagePath = prefs.getString('image_path');
+      _projectId = prefs.getInt('project_id');
+    });
+  }
 
   void dropDB() async {
     await sqlDb.dropDataBase();
@@ -83,7 +106,12 @@ class _NavDrawerState extends State<NavDrawer> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const CircleAvatar(
+                _imagePath != null
+                    ? CircleAvatar(
+                  radius: 40,
+                  backgroundImage: FileImage(File(_imagePath!)),
+                )
+                    : const CircleAvatar(
                   radius: 40,
                   backgroundColor: Colors.white,
                   child: Icon(Icons.person, size: 50, color: Colors.blue),
@@ -91,7 +119,7 @@ class _NavDrawerState extends State<NavDrawer> {
                 const SizedBox(width: 16),
                 Expanded(
                   child: Text(
-                    "menu".tr().toString(),
+                       _projectId.toString() ?? "menu".tr().toString(),
                     style: const TextStyle(color: Colors.white, fontSize: 25),
                   ),
                 ),
@@ -147,7 +175,6 @@ class _NavDrawerState extends State<NavDrawer> {
                   text: "language".tr().toString(),
                   onTap: () async {
                     _displayLanguageDialog(context);
-
                   },
                 ),
                 _buildListTile(

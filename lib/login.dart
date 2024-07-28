@@ -1,6 +1,9 @@
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
 import 'package:alfarsha/sqldb.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -15,13 +18,25 @@ class _LoginPageState extends State<LoginPage> {
   final SqlDb sqlDb = SqlDb();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
+  String _hashPassword(String password) {
+    final bytes = utf8.encode(password);
+    final digest = sha256.convert(bytes);
+    return digest.toString();
+  }
+
   Future<void> _login() async {
     if (_formKey.currentState?.validate() ?? false) {
       String projectName = _projectNameController.text;
-      String password = _passwordController.text;
+      String password = _hashPassword(_passwordController.text);
       Map<String, dynamic>? project = await sqlDb.authenticateProject(projectName, password);
 
+
       if (project != null) {
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setString('project_name', project['name']);
+        await prefs.setInt('project_id', project['id']);
+        await prefs.setString('image_path', project['image_path']);
+
         Navigator.pushReplacementNamed(context, '/');
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -41,16 +56,16 @@ class _LoginPageState extends State<LoginPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
-                title: Text('English'),
+                title: const Text('English'),
                 onTap: () {
-                  EasyLocalization.of(context)?.setLocale(Locale('en', 'US'));
+                  EasyLocalization.of(context)?.setLocale(const Locale('en', 'US'));
                   Navigator.of(context).pop();
                 },
               ),
               ListTile(
-                title: Text('Arabic'),
+                title: const Text('Arabic'),
                 onTap: () {
-                  EasyLocalization.of(context)?.setLocale(Locale('ar', 'SA'));
+                  EasyLocalization.of(context)?.setLocale(const Locale('ar', 'SA'));
                   Navigator.of(context).pop();
                 },
               ),

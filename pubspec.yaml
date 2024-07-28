@@ -40,6 +40,8 @@ dependencies:
   intl: ^0.18.0
   month_picker_dialog: ^2.0.2
   image_picker: ^1.0.7
+  shared_preferences: ^2.2.2
+  crypto: ^3.0.3
 
 dev_dependencies:
   flutter_test:

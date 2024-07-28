@@ -1,5 +1,6 @@
+import 'dart:convert';
 import 'dart:io';
-
+import 'package:crypto/crypto.dart';
 import 'package:alfarsha/sqldb.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -18,9 +19,15 @@ class _RegisterPageState extends State<RegisterPage> {
   final SqlDb sqlDb = SqlDb();
   String? _imagePath;
 
+  String _hashPassword(String password) {
+    final bytes = utf8.encode(password);
+    final digest = sha256.convert(bytes);
+    return digest.toString();
+  }
+
   Future<void> _register() async {
     String username = _usernameController.text;
-    String password = _passwordController.text;
+    String password = _hashPassword(_passwordController.text);
 
     int response = await sqlDb.insertData('''
       INSERT INTO projects (name, password, image_path) VALUES ('$username', '$password', '$_imagePath')
@@ -31,7 +38,7 @@ class _RegisterPageState extends State<RegisterPage> {
         SnackBar(
           content: Text(
             'project_created_successfully'.tr().toString(),
-            style: TextStyle(color: Colors.white),
+            style: const TextStyle(color: Colors.white),
           ),
           backgroundColor: Colors.green,
         ),
@@ -42,7 +49,7 @@ class _RegisterPageState extends State<RegisterPage> {
         SnackBar(
           content: Text(
             'fail_create_project'.tr().toString(),
-            style: TextStyle(color: Colors.white),
+            style: const TextStyle(color: Colors.white),
           ),
           backgroundColor: Colors.red,
         ),
@@ -71,16 +78,16 @@ class _RegisterPageState extends State<RegisterPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
-                title: Text('English'),
+                title: const Text('English'),
                 onTap: () {
-                  EasyLocalization.of(context)?.setLocale(Locale('en', 'US'));
+                  EasyLocalization.of(context)?.setLocale(const Locale('en', 'US'));
                   Navigator.of(context).pop();
                 },
               ),
               ListTile(
-                title: Text('Arabic'),
+                title: const Text('Arabic'),
                 onTap: () {
-                  EasyLocalization.of(context)?.setLocale(Locale('ar', 'SA'));
+                  EasyLocalization.of(context)?.setLocale(const Locale('ar', 'SA'));
                   Navigator.of(context).pop();
                 },
               ),
@@ -124,33 +131,46 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
               const SizedBox(height: 20),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  ElevatedButton.icon(
-                    onPressed: _pickImage,
-                    icon: const Icon(Icons.camera_alt_outlined, size: 20),
-                    label: Text('upload_image'.tr().toString()),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                      textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: _pickImage,
+                      child: Container(
+                        height: 100,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[200],
+                          border: Border.all(
+                            color: Colors.black45,
+                            width: 1,
+                            style: BorderStyle.solid,
+                          ),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.add_photo_alternate, size: 50, color: Colors.black45),
+                            const SizedBox(height: 8),
+                            Text('upload_image'.tr().toString(), style: const TextStyle(color: Colors.black45)),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                   const SizedBox(width: 16), // Space between button and image
                   if (_imagePath != null) ...[
-                    Container(
-                      height: 100.0,
-                      width: 100.0,
-                      decoration: BoxDecoration(
-                        image: DecorationImage(
-                          image: AssetImage(_imagePath!),
-                          fit: BoxFit.fill,
+                    SizedBox(
+                      width: 100, // Adjust the width as needed
+                      height: 100, // Adjust the height as needed
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8), // Rounded corners for the image
+                        child: Image.file(
+                          File(_imagePath!),
+                          fit: BoxFit.cover, // Adjust image fit
                         ),
-                        shape: BoxShape.circle,
                       ),
-                    )
+                    ),
                   ],
                 ],
               ),
@@ -165,7 +185,6 @@ class _RegisterPageState extends State<RegisterPage> {
           ),
         ),
       ),
-
     );
   }
 }
