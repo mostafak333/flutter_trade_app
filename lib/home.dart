@@ -31,10 +31,12 @@ class _HomeState extends State<Home> {
   @override
   void initState() {
     super.initState();
-    _loadUserInfo();
+    _initializeData();
+  }
+  Future<void> _initializeData() async {
+    await _loadUserInfo();
     fetchProductList();
     fetchSalesList();
-
   }
   int? _projectId;
   Future<void> _loadUserInfo() async {

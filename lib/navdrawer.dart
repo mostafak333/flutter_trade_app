@@ -8,6 +8,8 @@ import 'package:alfarsha/monthlyReport.dart';
 import 'package:alfarsha/products.dart';
 import 'package:alfarsha/listedDailyReport.dart';
 import 'package:alfarsha/dailyReport.dart';
+import 'package:alfarsha/security.dart';
+import 'package:alfarsha/settings.dart';
 import 'package:flutter/material.dart';
 import 'sqldb.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -36,13 +38,12 @@ class _NavDrawerState extends State<NavDrawer> {
     _loadUserInfo();
   }
 
-  int? _projectId;
   Future<void> _loadUserInfo() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
       _projectName = prefs.getString('project_name');
       _imagePath = prefs.getString('image_path');
-      _projectId = prefs.getInt('project_id');
+      print(">>>>>>>>>>>>> $_imagePath");
     });
   }
 
@@ -69,7 +70,7 @@ class _NavDrawerState extends State<NavDrawer> {
                         EasyLocalization.of(context)?.setLocale(
                             Locale(languageCode[0], countryCode[0]));
 
-                        Navigator.of(context).push(MaterialPageRoute(
+                        Navigator.of(context).pop(MaterialPageRoute(
                             builder: (context) => const Home()));
                       },
                     ),
@@ -106,20 +107,20 @@ class _NavDrawerState extends State<NavDrawer> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                _imagePath != null
+                _imagePath != null && File(_imagePath!).existsSync()
                     ? CircleAvatar(
-                  radius: 40,
-                  backgroundImage: FileImage(File(_imagePath!)),
-                )
+                        radius: 40,
+                        backgroundImage: FileImage(File(_imagePath!)),
+                      )
                     : const CircleAvatar(
-                  radius: 40,
-                  backgroundColor: Colors.white,
-                  child: Icon(Icons.person, size: 50, color: Colors.blue),
-                ),
+                        radius: 40,
+                        backgroundColor: Colors.grey,
+                        child: Icon(Icons.person, size: 50, color: Colors.white),
+                      ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Text(
-                       _projectId.toString() ?? "menu".tr().toString(),
+                    _projectName ?? "menu".tr().toString(),
                     style: const TextStyle(color: Colors.white, fontSize: 25),
                   ),
                 ),
@@ -134,8 +135,8 @@ class _NavDrawerState extends State<NavDrawer> {
                   icon: Icons.shopping_cart,
                   text: "products".tr().toString(),
                   onTap: () {
-                    Navigator.of(context).push(MaterialPageRoute(
-                        builder: (context) => Products()));
+                    Navigator.of(context).push(
+                        MaterialPageRoute(builder: (context) => Products()));
                   },
                 ),
                 _buildListTile(
@@ -171,6 +172,22 @@ class _NavDrawerState extends State<NavDrawer> {
                   },
                 ),
                 _buildListTile(
+                  icon: Icons.settings,
+                  text: "settings".tr().toString(),
+                  onTap: () {
+                    Navigator.of(context).push(MaterialPageRoute(
+                        builder: (context) => const SettingsPage()));
+                  },
+                ),
+                _buildListTile(
+                  icon: Icons.lock,
+                  text: "security".tr().toString(),
+                  onTap: () {
+                    Navigator.of(context).push(MaterialPageRoute(
+                        builder: (context) => const SecuritySettingsPage()));
+                  },
+                ),
+                _buildListTile(
                   icon: Icons.language,
                   text: "language".tr().toString(),
                   onTap: () async {
@@ -182,9 +199,15 @@ class _NavDrawerState extends State<NavDrawer> {
                   text: "logout".tr().toString(),
                   textColor: Colors.red,
                   iconColor: Colors.red, // Set logout icon color to red
-                  onTap: () {
-                    Navigator.of(context).pushReplacement(MaterialPageRoute(
-                        builder: (context) => const LoginPage()));
+                  onTap: () async {
+                    SharedPreferences prefs =
+                        await SharedPreferences.getInstance();
+                    await prefs.setBool(
+                        'isLoggedIn', false); // Clear login status
+                    Navigator.of(context).pushAndRemoveUntil(
+                        MaterialPageRoute(
+                            builder: (context) => const LoginPage()),
+                        (route) => false);
                   },
                 ),
               ],

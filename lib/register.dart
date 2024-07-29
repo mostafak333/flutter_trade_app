@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:alfarsha/login.dart';
 import 'package:crypto/crypto.dart';
 import 'package:alfarsha/sqldb.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -16,6 +17,8 @@ class RegisterPage extends StatefulWidget {
 class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final GlobalKey<FormState> _formKey =
+      GlobalKey<FormState>(); // Form key for validation
   final SqlDb sqlDb = SqlDb();
   String? _imagePath;
 
@@ -26,34 +29,40 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   Future<void> _register() async {
-    String username = _usernameController.text;
-    String password = _hashPassword(_passwordController.text);
+    if (_formKey.currentState?.validate() ?? false) {
+      String username = _usernameController.text;
+      String password = _hashPassword(_passwordController.text);
 
-    int response = await sqlDb.insertData('''
-      INSERT INTO projects (name, password, image_path) VALUES ('$username', '$password', '$_imagePath')
-    ''');
+      int response = await sqlDb.insertData('''
+        INSERT INTO projects (name, password, image_path) VALUES ('$username', '$password', '$_imagePath')
+      ''');
 
-    if (response > 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'project_created_successfully'.tr().toString(),
-            style: const TextStyle(color: Colors.white),
+      if (response > 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'project_created_successfully'.tr().toString(),
+              style: const TextStyle(color: Colors.white),
+            ),
+            backgroundColor: Colors.green,
           ),
-          backgroundColor: Colors.green,
-        ),
-      );
-      Navigator.pushReplacementNamed(context, '/login');
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'fail_create_project'.tr().toString(),
-            style: const TextStyle(color: Colors.white),
+        );
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginPage()),
+          (route) => false,
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'fail_create_project'.tr().toString(),
+              style: const TextStyle(color: Colors.white),
+            ),
+            backgroundColor: Colors.red,
           ),
-          backgroundColor: Colors.red,
-        ),
-      );
+        );
+      }
     }
   }
 
@@ -80,14 +89,16 @@ class _RegisterPageState extends State<RegisterPage> {
               ListTile(
                 title: const Text('English'),
                 onTap: () {
-                  EasyLocalization.of(context)?.setLocale(const Locale('en', 'US'));
+                  EasyLocalization.of(context)
+                      ?.setLocale(const Locale('en', 'US'));
                   Navigator.of(context).pop();
                 },
               ),
               ListTile(
                 title: const Text('Arabic'),
                 onTap: () {
-                  EasyLocalization.of(context)?.setLocale(const Locale('ar', 'SA'));
+                  EasyLocalization.of(context)
+                      ?.setLocale(const Locale('ar', 'SA'));
                   Navigator.of(context).pop();
                 },
               ),
@@ -113,75 +124,94 @@ class _RegisterPageState extends State<RegisterPage> {
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TextField(
-                controller: _usernameController,
-                decoration: InputDecoration(
-                  labelText: 'project_name'.tr().toString(),
-                ),
-              ),
-              TextField(
-                controller: _passwordController,
-                decoration: InputDecoration(
-                  labelText: 'password'.tr().toString(),
-                ),
-                obscureText: true,
-              ),
-              const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: _pickImage,
-                      child: Container(
-                        height: 100,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[200],
-                          border: Border.all(
-                            color: Colors.black45,
-                            width: 1,
-                            style: BorderStyle.solid,
-                          ),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.add_photo_alternate, size: 50, color: Colors.black45),
-                            const SizedBox(height: 8),
-                            Text('upload_image'.tr().toString(), style: const TextStyle(color: Colors.black45)),
-                          ],
-                        ),
-                      ),
-                    ),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextFormField(
+                  controller: _usernameController,
+                  decoration: InputDecoration(
+                    labelText: 'project_name'.tr().toString(),
                   ),
-                  const SizedBox(width: 16), // Space between button and image
-                  if (_imagePath != null) ...[
-                    SizedBox(
-                      width: 100, // Adjust the width as needed
-                      height: 100, // Adjust the height as needed
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8), // Rounded corners for the image
-                        child: Image.file(
-                          File(_imagePath!),
-                          fit: BoxFit.cover, // Adjust image fit
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'enter_project_name'.tr().toString();
+                    }
+                    return null;
+                  },
+                ),
+                TextFormField(
+                  controller: _passwordController,
+                  decoration: InputDecoration(
+                    labelText: 'password'.tr().toString(),
+                  ),
+                  obscureText: true,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'enter_password'.tr().toString();
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: _pickImage,
+                        child: Container(
+                          height: 100,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[200],
+                            border: Border.all(
+                              color: Colors.black45,
+                              width: 1,
+                              style: BorderStyle.solid,
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.add_photo_alternate,
+                                  size: 50, color: Colors.black45),
+                              const SizedBox(height: 8),
+                              Text('upload_image'.tr().toString(),
+                                  style:
+                                      const TextStyle(color: Colors.black45)),
+                            ],
+                          ),
                         ),
                       ),
                     ),
+                    const SizedBox(width: 16), // Space between button and image
+                    if (_imagePath != null) ...[
+                      SizedBox(
+                        width: 100, // Adjust the width as needed
+                        height: 100, // Adjust the height as needed
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(
+                              8), // Rounded corners for the image
+                          child: Image.file(
+                            File(_imagePath!),
+                            fit: BoxFit.cover, // Adjust image fit
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
-                ],
-              ),
-              const SizedBox(height: 20),
-              Center(
-                child: ElevatedButton(
-                  onPressed: _register,
-                  child: Text('create'.tr().toString()),
                 ),
-              ),
-            ],
+                const SizedBox(height: 20),
+                Center(
+                  child: ElevatedButton(
+                    onPressed: _register,
+                    child: Text('create'.tr().toString()),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

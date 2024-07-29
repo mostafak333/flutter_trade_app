@@ -47,7 +47,6 @@ class _ProductsState extends State<Products> {
     });
   }
   void fetchProductList() async {
-    print('Stored project_id:>>>>>>>>>>>>> ${_projectId}');
     List<Map> response =
         await sqlDb.readData("SELECT * FROM 'products' WHERE project_id = $_projectId ORDER BY id DESC ");
     setState(() {

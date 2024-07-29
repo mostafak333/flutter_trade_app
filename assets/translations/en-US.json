@@ -59,5 +59,12 @@
     "invalid_project_name_password": "Invalid project name or password",
     "project_created_successfully": "Project created successfully",
     "fail_create_project": "Fail while creating project",
-    "upload_image": "Upload image"
+    "upload_image": "Upload image",
+    "settings": "Settings",
+    "old_password": "Old password",
+    "enter_old_password":"Enter old password",
+    "new_password": "New password",
+    "update":"Update",
+    "info_updated_successfully": "Info updated successfully",
+    "fail_update_info":"Fail to update info"
 }

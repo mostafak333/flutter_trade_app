@@ -30,9 +30,14 @@ class _InventoryState extends State<Inventory> {
   @override
   void initState() {
     super.initState();
-    _loadUserInfo();
+    _initializeData();
+  }
+
+  Future<void> _initializeData() async {
+    await _loadUserInfo();
     fetchProductList();
   }
+
   int? _projectId;
   Future<void> _loadUserInfo() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();

@@ -59,6 +59,12 @@
   "invalid_project_name_password":"خطأ في اسم المشروع او كلمة المرور",
   "project_created_successfully": "تم انشاء مشروع جديد بنجاح",
   "fail_create_project": "خطأ في انشاء مشروع جديد",
-  "upload_image": "اضافة صورة"
-
+  "upload_image": "اضافة صورة",
+  "settings": "الاعدادات",
+  "old_password": "كلمة المرور القديمة",
+  "enter_old_password":"ادخل كلمة المرور القديمة",
+  "new_password": "كلمة المرور الجديدة",
+  "update":"تحديث",
+  "info_updated_successfully": "تم تحديث البيانات بنجاح",
+  "fail_update_info":"فشل في تحديث البيانات"
 }

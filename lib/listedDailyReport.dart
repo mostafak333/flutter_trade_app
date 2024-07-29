@@ -27,10 +27,16 @@ class _ListedDailyReportState extends State<ListedDailyReport> {
   @override
   void initState() {
     super.initState();
-    _loadUserInfo();
+    _initializeData();
+
+  }
+
+  Future<void> _initializeData() async {
+    await _loadUserInfo();
     fetchListDailyReport();
     fetchTotalMoney();
   }
+
   int? _projectId;
   Future<void> _loadUserInfo() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();

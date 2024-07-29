@@ -38,10 +38,14 @@ class _MonthlyReportState extends State<MonthlyReport> {
     final locale = EasyLocalization.of(context)?.locale;
     languageCode = locale!.languageCode;
     monthName = DateFormat.MMMM(languageCode).format(dateValue).toString();
-    _loadUserInfo();
+
+    _initializeData();
+  }
+
+  Future<void> _initializeData() async {
+    await _loadUserInfo();
     getSellingProductFormDate(dateValue);
     getIMoneyData(dateValue);
-
   }
   int? _projectId;
   Future<void> _loadUserInfo() async {
