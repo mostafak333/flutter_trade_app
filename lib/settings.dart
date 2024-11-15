@@ -1,3 +1,5 @@
+import 'dart:ffi';
+import 'dart:ffi';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -9,11 +11,12 @@ class SettingsPage extends StatefulWidget {
   const SettingsPage({Key? key}) : super(key: key);
 
   @override
-  _SettingsPageState createState() => _SettingsPageState();
+  SettingsPageState createState() => SettingsPageState();
 }
 
-class _SettingsPageState extends State<SettingsPage> {
-  final TextEditingController _usernameController = TextEditingController();
+class SettingsPageState extends State<SettingsPage> {
+  final TextEditingController _projectNameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final SqlDb sqlDb = SqlDb();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
@@ -27,25 +30,65 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Future<void> _loadProjectData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    _usernameController.text = prefs.getString('project_name') ?? '';
+    _projectNameController.text = prefs.getString('project_name') ?? '';
+    _emailController.text = prefs.getString('email') ?? '';
     _imagePath = prefs.getString('image_path');
     setState(() {});
   }
 
   Future<void> _updateProjectSettings() async {
+
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+    if (_formKey.currentState?.validate() ?? false) {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    String username = _usernameController.text;
+    String projectName = _projectNameController.text;
+    String email = _emailController.text;
     int projectId = prefs.getInt('project_id') ?? 0;
 
+
+    // Step 1: Check if the email already exists
+    var existingEmail = await sqlDb.readData('''
+      SELECT * FROM projects WHERE email = '$email' AND id != '$projectId'
+    ''');
+
+    var existingProjectName = await sqlDb.readData('''
+      SELECT * FROM projects WHERE name = '$projectName' AND id != '$projectId'
+    ''');
+    if (existingProjectName.isNotEmpty) {
+      // If the email already exists, show an error message
+      scaffoldMessenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            'projectName_already_exists'.tr().toString(),
+            style: const TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+    if (existingEmail.isNotEmpty) {
+      // If the email already exists, show an error message
+      scaffoldMessenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            'email_already_exists'.tr().toString(),
+            style: const TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
     // Update project data
     int response = await sqlDb.updateData('''
-    UPDATE projects SET name = '$username', image_path = '$_imagePath' WHERE id = $projectId
+    UPDATE projects SET name = '$projectName', image_path = '$_imagePath', email = '$email' WHERE id = $projectId
   ''');
 
     if (response > 0) {
-      await prefs.setString('project_name', username);
+      await prefs.setString('project_name', projectName);
+      await prefs.setString('email', email);
       await prefs.setString('image_path', _imagePath ?? '');
-      ScaffoldMessenger.of(context).showSnackBar(
+      scaffoldMessenger.showSnackBar(
         SnackBar(
           content: Text(
             'info_updated_successfully'.tr().toString(),
@@ -54,9 +97,9 @@ class _SettingsPageState extends State<SettingsPage> {
           backgroundColor: Colors.green,
         ),
       );
-      Navigator.pushReplacementNamed(context, '/'); // Navigate to home page
+      navigator.pushReplacementNamed('/'); // Navigate to home page
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
+      scaffoldMessenger.showSnackBar(
         SnackBar(
           content: Text(
             'fail_update_info'.tr().toString(),
@@ -65,12 +108,12 @@ class _SettingsPageState extends State<SettingsPage> {
           backgroundColor: Colors.red,
         ),
       );
-    }
+    }}
   }
 
   Future<void> _pickImage() async {
-    final ImagePicker _picker = ImagePicker();
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
 
     if (image != null) {
       setState(() {
@@ -94,13 +137,25 @@ class _SettingsPageState extends State<SettingsPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 TextFormField(
-                  controller: _usernameController,
+                  controller: _projectNameController,
                   decoration: InputDecoration(
                     labelText: 'project_name'.tr().toString(),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'enter_project_name'.tr().toString();
+                    }
+                    return null;
+                  },
+                ),
+                TextFormField(
+                  controller: _emailController,
+                  decoration: InputDecoration(
+                    labelText: 'email'.tr().toString(),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'enter_email'.tr().toString();
                     }
                     return null;
                   },

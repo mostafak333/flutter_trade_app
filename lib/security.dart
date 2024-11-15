@@ -9,10 +9,10 @@ class SecuritySettingsPage extends StatefulWidget {
   const SecuritySettingsPage({Key? key}) : super(key: key);
 
   @override
-  _SecuritySettingsPageState createState() => _SecuritySettingsPageState();
+  SecuritySettingsPageState createState() => SecuritySettingsPageState();
 }
 
-class _SecuritySettingsPageState extends State<SecuritySettingsPage> {
+class SecuritySettingsPageState extends State<SecuritySettingsPage> {
   final TextEditingController _oldPasswordController = TextEditingController();
   final TextEditingController _newPasswordController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
@@ -25,6 +25,7 @@ class _SecuritySettingsPageState extends State<SecuritySettingsPage> {
   }
 
   Future<void> _updatePassword() async {
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
     if (_formKey.currentState?.validate() ?? false) {
       String oldPassword = _hashPassword(_oldPasswordController.text);
       String newPassword = _newPasswordController.text.isEmpty
@@ -38,7 +39,7 @@ class _SecuritySettingsPageState extends State<SecuritySettingsPage> {
       Map<String, dynamic>? project =
       await sqlDb.authenticateProject(username, oldPassword);
       if (project == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        scaffoldMessenger.showSnackBar(
           SnackBar(
             content: Text('invalid_old_password'.tr().toString()),
             backgroundColor: Colors.red,
@@ -53,7 +54,7 @@ class _SecuritySettingsPageState extends State<SecuritySettingsPage> {
       ''');
 
       if (response > 0) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        scaffoldMessenger.showSnackBar(
           SnackBar(
             content: Text(
               'password_updated_successfully'.tr().toString(),
@@ -63,10 +64,10 @@ class _SecuritySettingsPageState extends State<SecuritySettingsPage> {
           ),
         );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
+        scaffoldMessenger.showSnackBar(
           SnackBar(
             content: Text(
-              'fail_update_password'.tr().toString(),
+              'something_went_wrong'.tr().toString(),
               style: const TextStyle(color: Colors.white),
             ),
             backgroundColor: Colors.red,
@@ -108,6 +109,12 @@ class _SecuritySettingsPageState extends State<SecuritySettingsPage> {
                   labelText: 'new_password'.tr().toString(),
                 ),
                 obscureText: true,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'enter_new_password'.tr().toString();
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 20),
               Center(

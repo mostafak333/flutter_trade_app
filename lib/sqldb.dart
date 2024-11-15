@@ -1,5 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
 
 class SqlDb {
   static Database? _db;
@@ -18,13 +20,13 @@ class SqlDb {
     String path = join(databasePath, 'business.db');
     //print("DB path ==> " + path);
     Database myDb = await openDatabase(path,
-        onCreate: _onCreate, version: 6, onUpgrade: _onUpgrade);
+        onCreate: _onCreate, version: 1, onUpgrade: _onUpgrade);
     return myDb;
   }
 
   _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 4) {
-    //  await _updateProductTable(db);
+      //  await _updateProductTable(db);
     }
 
     // Add more migration logic for other versions as needed
@@ -35,6 +37,7 @@ class SqlDb {
     CREATE TABLE "projects" (
       "id" INTEGER PRIMARY KEY AUTOINCREMENT,
       "name" VARCHAR(255) NOT NULL,
+      "email" VARCHAR(255) UNIQUE NOT NULL,
       "password" VARCHAR(255) NOT NULL,
       "image_path" TEXT,
       "created_at" timestamp DATE DEFAULT (datetime('now','localtime'))
@@ -115,7 +118,8 @@ class SqlDb {
     //print("<=== Drop Database ===>");
   }
 
-  Future<Map<String, dynamic>?> authenticateProject(String name, String password) async {
+  Future<Map<String, dynamic>?> authenticateProject(
+      String name, String password) async {
     var dbClient = await db;
     List<Map> result = await dbClient!.query(
       'projects',
@@ -126,5 +130,19 @@ class SqlDb {
       return result.first as Map<String, dynamic>;
     }
     return null;
+  }
+  Future<String> exportDatabase() async {
+    // Get the path to the current SQLite database
+    String dbPath = await getDatabasesPath();
+    String fullDbPath = '$dbPath/business.db';
+
+    // Get a temporary directory for the export
+    Directory tempDir = await getTemporaryDirectory();
+    String tempPath = '${tempDir.path}/backup.db';
+
+    // Copy the database file to the temp directory
+    File dbFile = File(fullDbPath);
+    await dbFile.copy(tempPath);
+    return tempPath;
   }
 }

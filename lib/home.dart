@@ -26,7 +26,6 @@ class _HomeState extends State<Home> {
   Color editButtonColor = Constants.blue;
   double tableContentFontSize = Constants.tableContentFontSize;
   double tableTitleFontSize = Constants.tableTitleFontSize;
-  static const double paddingSize = Constants.padding;
   String pickedDateValue = DateFormat('yyyy-MM-dd').format(DateTime.now()).toString();
   @override
   void initState() {
@@ -73,7 +72,7 @@ class _HomeState extends State<Home> {
     });
   }
 
-  void storeSale(id, price, date) async {
+  Future<void> storeSale(id, price, date) async {
     int response = await sqlDb.insertData(
         "INSERT INTO 'sales' ('product_id','project_id','sold_price',created_at) VALUES ('$id','$_projectId','$price','$date')");
     if (response > 0) {
@@ -226,16 +225,26 @@ class _HomeState extends State<Home> {
       });
     }
   }
+  bool isProcessing = false;
 
+  void handleButtonPress(int productId, String price) async {
+    if (isProcessing) return; // Prevent duplicate presses while processing
+    setState(() {
+      isProcessing = true; // Disable buttons during processing
+    });
+    await storeSale(productId, price, pickedDateValue);
+    updateProductQuantity(productId,false);
+    setState(() {
+      isProcessing = false; // Re-enable buttons after processing
+    });
+  }
   @override
   Widget build(BuildContext context) {
     List<Widget> buttons = [];
     for (var product in productList) {
       buttons.add(ElevatedButton(
-        onPressed: () async {
-          fetchSalesList();
-          storeSale(product['id'].toString(), product['salePrice'],pickedDateValue);
-          updateProductQuantity(product['id'],false);
+        onPressed: isProcessing ? null : () async {
+          handleButtonPress(product['id'], product['salePrice'].toString());
         },
         child: Text(product['name'].toString()),
       ));
@@ -252,7 +261,7 @@ class _HomeState extends State<Home> {
       ));
     }*/
     return Scaffold(
-      drawer: NavDrawer(),
+      drawer: const NavDrawer(),
       appBar: AppBar(
         title: Text("home".tr().toString()),
         actions: [
@@ -314,7 +323,7 @@ class _HomeState extends State<Home> {
                               color: tableHeaderTitleColor),
                         )),
                   ],
-                  rows: [],
+                  rows: const [],
                 )),
           ) :
           Expanded(

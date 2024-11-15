@@ -11,11 +11,12 @@ class RegisterPage extends StatefulWidget {
   const RegisterPage({Key? key}) : super(key: key);
 
   @override
-  _RegisterPageState createState() => _RegisterPageState();
+  RegisterPageState createState() => RegisterPageState();
 }
 
-class _RegisterPageState extends State<RegisterPage> {
-  final TextEditingController _usernameController = TextEditingController();
+class RegisterPageState extends State<RegisterPage> {
+  final TextEditingController _projectNameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final GlobalKey<FormState> _formKey =
       GlobalKey<FormState>(); // Form key for validation
@@ -30,15 +31,56 @@ class _RegisterPageState extends State<RegisterPage> {
 
   Future<void> _register() async {
     if (_formKey.currentState?.validate() ?? false) {
-      String username = _usernameController.text;
+      final scaffoldMessenger = ScaffoldMessenger.of(context);
+      final navigator = Navigator.of(context);
+
+      String projectName = _projectNameController.text;
+      String email = _emailController.text;
       String password = _hashPassword(_passwordController.text);
 
+      // Step 1: Check if the email already exists
+      var existingEmail = await sqlDb.readData('''
+      SELECT * FROM projects WHERE email = '$email'
+    ''');
+
+      var existingProjectName = await sqlDb.readData('''
+      SELECT * FROM projects WHERE name = '$projectName'
+    ''');
+
+      if (existingProjectName.isNotEmpty) {
+        scaffoldMessenger.showSnackBar(
+          SnackBar(
+            content: Text(
+              'project_name_already_exists'.tr().toString(),
+              style: const TextStyle(color: Colors.white),
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      if (existingEmail.isNotEmpty) {
+        scaffoldMessenger.showSnackBar(
+          SnackBar(
+            content: Text(
+              'email_already_exists'.tr().toString(),
+              style: const TextStyle(color: Colors.white),
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      // Step 2: Proceed with registration if the email does not exist
       int response = await sqlDb.insertData('''
-        INSERT INTO projects (name, password, image_path) VALUES ('$username', '$password', '$_imagePath')
-      ''');
+      INSERT INTO projects (name, email, password, image_path) 
+      VALUES ('$projectName', '$email', '$password', '$_imagePath')
+    ''');
 
       if (response > 0) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        scaffoldMessenger.showSnackBar(
           SnackBar(
             content: Text(
               'project_created_successfully'.tr().toString(),
@@ -47,13 +89,12 @@ class _RegisterPageState extends State<RegisterPage> {
             backgroundColor: Colors.green,
           ),
         );
-        Navigator.pushAndRemoveUntil(
-          context,
+        navigator.pushAndRemoveUntil(
           MaterialPageRoute(builder: (context) => const LoginPage()),
-          (route) => false,
+              (route) => false,
         );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
+        scaffoldMessenger.showSnackBar(
           SnackBar(
             content: Text(
               'fail_create_project'.tr().toString(),
@@ -66,9 +107,10 @@ class _RegisterPageState extends State<RegisterPage> {
     }
   }
 
+
   Future<void> _pickImage() async {
-    final ImagePicker _picker = ImagePicker();
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
 
     if (image != null) {
       setState(() {
@@ -130,13 +172,28 @@ class _RegisterPageState extends State<RegisterPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 TextFormField(
-                  controller: _usernameController,
+                  controller: _projectNameController,
                   decoration: InputDecoration(
                     labelText: 'project_name'.tr().toString(),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'enter_project_name'.tr().toString();
+                    }
+                    return null;
+                  },
+                ),
+                TextFormField(
+                  controller: _emailController,
+                  decoration: InputDecoration(
+                    labelText: 'email'.tr().toString(),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'enter_email'.tr().toString();
+                    }
+                    if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                      return 'enter_valid_email'.tr().toString();
                     }
                     return null;
                   },

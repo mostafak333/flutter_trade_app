@@ -19,7 +19,7 @@ class _ProductsState extends State<Products> {
   bool _nameValidate = false;
   bool _wholesalePriceValidate = false;
   bool _salePriceValidate = false;
-  bool _displayQuantityValidate = false;
+  final bool _displayQuantityValidate = false;
   bool _deleteValidate = false;
   Color tableHeaderColor = Constants.tableHeaderColor;
   Color tableHeaderTitleColor = Constants.white;

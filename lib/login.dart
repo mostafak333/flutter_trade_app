@@ -9,15 +9,16 @@ class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
 
   @override
-  _LoginPageState createState() => _LoginPageState();
+  LoginPageState createState() => LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class LoginPageState extends State<LoginPage> {
   final TextEditingController _projectNameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final SqlDb sqlDb = SqlDb();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
+  // Method to hash the password
   String _hashPassword(String password) {
     final bytes = utf8.encode(password);
     final digest = sha256.convert(bytes);
@@ -25,23 +26,26 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _login() async {
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+
     if (_formKey.currentState?.validate() ?? false) {
       String projectName = _projectNameController.text;
       String password = _hashPassword(_passwordController.text);
-      Map<String, dynamic>? project =
-      await sqlDb.authenticateProject(projectName, password);
+      Map<String, dynamic>? project = await sqlDb.authenticateProject(projectName, password);
 
       if (project != null) {
         SharedPreferences prefs = await SharedPreferences.getInstance();
         await prefs.setString('project_name', project['name']);
+        await prefs.setString('email', project['email']);
         await prefs.setInt('project_id', project['id']);
         await prefs.setString('image_path', project['image_path']);
         await prefs.setBool('isLoggedIn', true);
         await prefs.setString('password', _hashPassword(_passwordController.text));
 
-        Navigator.of(context).pushReplacementNamed('/');
+        navigator.pushReplacementNamed('/');
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
+        scaffoldMessenger.showSnackBar(
           SnackBar(
             content: Text(
               'invalid_project_name_password'.tr().toString(),
@@ -54,6 +58,7 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  // Method to show language selection dialog
   void _showLanguageDialog() {
     showDialog(
       context: context,
@@ -145,6 +150,13 @@ class _LoginPageState extends State<LoginPage> {
                       Navigator.pushNamed(context, '/create-project');
                     },
                     child: Text('create_project'.tr().toString()),
+                  ),
+                  const SizedBox(height: 10),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/forget-password');
+                    },
+                    child: Text('forget_password'.tr().toString()),
                   ),
                 ],
               ),

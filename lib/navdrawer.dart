@@ -15,6 +15,7 @@ import 'sqldb.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io';
+import 'package:alfarsha/backup.dart';
 
 class NavDrawer extends StatefulWidget {
   const NavDrawer({super.key});
@@ -27,10 +28,11 @@ class _NavDrawerState extends State<NavDrawer> {
   SqlDb sqlDb = SqlDb();
   List languageCode = ["en", "ar"];
   List countryCode = ["US", "SA"];
-  Color IconBlue = Constants.tableHeaderColor;
+  Color iconBlue = Constants.tableHeaderColor;
 
   String? _projectName;
   String? _imagePath;
+  String? _email;
 
   @override
   void initState() {
@@ -42,8 +44,8 @@ class _NavDrawerState extends State<NavDrawer> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
       _projectName = prefs.getString('project_name');
+      _email = prefs.getString('email');
       _imagePath = prefs.getString('image_path');
-      print(">>>>>>>>>>>>> $_imagePath");
     });
   }
 
@@ -109,19 +111,36 @@ class _NavDrawerState extends State<NavDrawer> {
               children: [
                 _imagePath != null && File(_imagePath!).existsSync()
                     ? CircleAvatar(
-                        radius: 40,
-                        backgroundImage: FileImage(File(_imagePath!)),
-                      )
+                  radius: 40,
+                  backgroundImage: FileImage(File(_imagePath!)),
+                )
                     : const CircleAvatar(
-                        radius: 40,
-                        backgroundColor: Colors.grey,
-                        child: Icon(Icons.person, size: 50, color: Colors.white),
-                      ),
+                  radius: 40,
+                  backgroundColor: Colors.grey,
+                  child: Icon(Icons.person, size: 50, color: Colors.white),
+                ),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: Text(
-                    _projectName ?? "menu".tr().toString(),
-                    style: const TextStyle(color: Colors.white, fontSize: 25),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _projectName ?? "menu".tr().toString(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 25,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        _email ?? "user@example.com",
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14, // Smaller font for email
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -136,7 +155,7 @@ class _NavDrawerState extends State<NavDrawer> {
                   text: "products".tr().toString(),
                   onTap: () {
                     Navigator.of(context).push(
-                        MaterialPageRoute(builder: (context) => Products()));
+                        MaterialPageRoute(builder: (context) => const Products()));
                   },
                 ),
                 _buildListTile(
@@ -195,20 +214,35 @@ class _NavDrawerState extends State<NavDrawer> {
                   },
                 ),
                 _buildListTile(
+                  icon: Icons.backup,
+                  text: "backup".tr().toString(),
+                  onTap: () async {
+                    backupDatabase();
+                  },
+                ),
+                /*_buildListTile(
+                  icon: Icons.dangerous,
+                  text: "drop DB".tr().toString(),
+                  onTap: () async {
+                    dropDB();
+                  },
+                ),*/
+                _buildListTile(
                   icon: Icons.logout,
                   text: "logout".tr().toString(),
                   textColor: Colors.red,
-                  iconColor: Colors.red, // Set logout icon color to red
-                  onTap: () async {
-                    SharedPreferences prefs =
-                        await SharedPreferences.getInstance();
-                    await prefs.setBool(
-                        'isLoggedIn', false); // Clear login status
-                    Navigator.of(context).pushAndRemoveUntil(
-                        MaterialPageRoute(
-                            builder: (context) => const LoginPage()),
-                        (route) => false);
-                  },
+                  iconColor: Colors.red,
+                    onTap: () async {
+                      // Capture the BuildContext immediately
+                      final navigator = Navigator.of(context);
+                      SharedPreferences prefs = await SharedPreferences.getInstance();
+                      await prefs.setBool('isLoggedIn', false);
+                      // Use the captured navigator
+                      navigator.pushAndRemoveUntil(
+                        MaterialPageRoute(builder: (context) => const LoginPage()),
+                            (route) => false,
+                      );
+                    },
                 ),
               ],
             ),
@@ -216,6 +250,7 @@ class _NavDrawerState extends State<NavDrawer> {
         ],
       ),
     );
+
   }
 
   Widget _buildListTile({
