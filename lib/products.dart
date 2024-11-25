@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'constants.dart';
 import 'sqldb.dart';
 
@@ -18,7 +19,7 @@ class _ProductsState extends State<Products> {
   bool _nameValidate = false;
   bool _wholesalePriceValidate = false;
   bool _salePriceValidate = false;
-  bool _displayQuantityValidate = false;
+  final bool _displayQuantityValidate = false;
   bool _deleteValidate = false;
   Color tableHeaderColor = Constants.tableHeaderColor;
   Color tableHeaderTitleColor = Constants.white;
@@ -29,12 +30,25 @@ class _ProductsState extends State<Products> {
   @override
   void initState() {
     super.initState();
+    _initializeData();
+  }
+
+  Future<void> _initializeData() async {
+    await _loadUserInfo();
     fetchProductList();
   }
 
+
+  int? _projectId;
+  Future<void> _loadUserInfo() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _projectId = prefs.getInt('project_id');
+    });
+  }
   void fetchProductList() async {
     List<Map> response =
-        await sqlDb.readData("SELECT * FROM 'products' ORDER BY id DESC ");
+        await sqlDb.readData("SELECT * FROM 'products' WHERE project_id = $_projectId ORDER BY id DESC ");
     setState(() {
       productList = response;
     });
@@ -50,8 +64,8 @@ class _ProductsState extends State<Products> {
 
   void store(name, wholesalePrice, salePrice, quantity) async {
     int response = await sqlDb.insertData('''
-    INSERT INTO 'products' ('name','wholesalePrice','salePrice','display_quantity') 
-    VALUES ('$name','$wholesalePrice',$salePrice,$quantity)
+    INSERT INTO 'products' ('name','project_id','wholesalePrice','salePrice','display_quantity') 
+    VALUES ('$name','$_projectId','$wholesalePrice',$salePrice,$quantity)
     ''');
     if (response > 0) {
       fetchProductList();

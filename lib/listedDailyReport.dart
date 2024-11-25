@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'constants.dart';
 import 'sqldb.dart';
 
@@ -26,14 +27,28 @@ class _ListedDailyReportState extends State<ListedDailyReport> {
   @override
   void initState() {
     super.initState();
+    _initializeData();
+
+  }
+
+  Future<void> _initializeData() async {
+    await _loadUserInfo();
     fetchListDailyReport();
     fetchTotalMoney();
   }
 
+  int? _projectId;
+  Future<void> _loadUserInfo() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _projectId = prefs.getInt('project_id');
+    });
+  }
   void fetchListDailyReport() async {
     List<Map> response = await sqlDb.readData('''
           SELECT COUNT(product_id) AS products_count, SUM(sold_price) AS price_sum, DATE(created_at) AS date
           FROM sales
+          WHERE project_id = $_projectId
           GROUP BY DATE(created_at)
           ORDER BY DATE(created_at) DESC;
           ''');
@@ -44,7 +59,7 @@ class _ListedDailyReportState extends State<ListedDailyReport> {
 
   void fetchTotalMoney() async {
     var response = await sqlDb.readData(
-      "SELECT SUM(sold_price) AS price_sum FROM sales",
+      "SELECT SUM(sold_price) AS price_sum FROM sales  WHERE project_id = $_projectId",
     );
     setState(() {
       totalMoney = response.first['price_sum'] != null

@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'sqldb.dart';
 import 'navdrawer.dart';
 import 'constants.dart';
@@ -25,19 +26,30 @@ class _HomeState extends State<Home> {
   Color editButtonColor = Constants.blue;
   double tableContentFontSize = Constants.tableContentFontSize;
   double tableTitleFontSize = Constants.tableTitleFontSize;
-  static const double paddingSize = Constants.padding;
   String pickedDateValue = DateFormat('yyyy-MM-dd').format(DateTime.now()).toString();
   @override
   void initState() {
     super.initState();
+    _initializeData();
+  }
+  Future<void> _initializeData() async {
+    await _loadUserInfo();
     fetchProductList();
     fetchSalesList();
   }
-
+  int? _projectId;
+  Future<void> _loadUserInfo() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _projectId = prefs.getInt('project_id');
+    });
+  }
   void fetchProductList() async {
     List<Map> response = await sqlDb.readData('''
         SELECT * FROM 'products' 
-        WHERE locked <> 1 AND display_quantity > 0
+        WHERE locked <> 1 
+        AND display_quantity > 0 
+        AND project_id = $_projectId
         ORDER BY id DESC 
         ''');
     setState(() {
@@ -50,7 +62,9 @@ class _HomeState extends State<Home> {
     SELECT sales.id as id, products.name as name, sales.sold_price, products.id as product_id
     FROM sales
     INNER JOIN products ON sales.product_id = products.id
-    WHERE DATE(sales.created_at) = '$pickedDateValue'
+    WHERE sales.project_id = $_projectId
+    AND products.project_id = $_projectId
+    AND DATE(sales.created_at) = '$pickedDateValue'
     ORDER BY sales.id DESC
     ''');
     setState(() {
@@ -58,9 +72,9 @@ class _HomeState extends State<Home> {
     });
   }
 
-  void storeSale(id, price, date) async {
+  Future<void> storeSale(id, price, date) async {
     int response = await sqlDb.insertData(
-        "INSERT INTO 'sales' ('product_id','sold_price',created_at) VALUES ('$id','$price','$date')");
+        "INSERT INTO 'sales' ('product_id','project_id','sold_price',created_at) VALUES ('$id','$_projectId','$price','$date')");
     if (response > 0) {
       fetchSalesList();
       fetchProductList();
@@ -211,16 +225,26 @@ class _HomeState extends State<Home> {
       });
     }
   }
+  bool isProcessing = false;
 
+  void handleButtonPress(int productId, String price) async {
+    if (isProcessing) return; // Prevent duplicate presses while processing
+    setState(() {
+      isProcessing = true; // Disable buttons during processing
+    });
+    await storeSale(productId, price, pickedDateValue);
+    updateProductQuantity(productId,false);
+    setState(() {
+      isProcessing = false; // Re-enable buttons after processing
+    });
+  }
   @override
   Widget build(BuildContext context) {
     List<Widget> buttons = [];
     for (var product in productList) {
       buttons.add(ElevatedButton(
-        onPressed: () async {
-          fetchSalesList();
-          storeSale(product['id'].toString(), product['salePrice'],pickedDateValue);
-          updateProductQuantity(product['id'],false);
+        onPressed: isProcessing ? null : () async {
+          handleButtonPress(product['id'], product['salePrice'].toString());
         },
         child: Text(product['name'].toString()),
       ));
@@ -237,7 +261,7 @@ class _HomeState extends State<Home> {
       ));
     }*/
     return Scaffold(
-      drawer: NavDrawer(),
+      drawer: const NavDrawer(),
       appBar: AppBar(
         title: Text("home".tr().toString()),
         actions: [
@@ -299,7 +323,7 @@ class _HomeState extends State<Home> {
                               color: tableHeaderTitleColor),
                         )),
                   ],
-                  rows: [],
+                  rows: const [],
                 )),
           ) :
           Expanded(

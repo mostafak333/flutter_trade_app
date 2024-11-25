@@ -3,6 +3,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:alfarsha/home.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'constants.dart';
 import 'sqldb.dart';
 
@@ -17,7 +18,11 @@ class _DailyReportState extends State<DailyReport> {
   SqlDb sqlDb = SqlDb();
   List<DateTime> dates = [];
   List<Map> sellingProducts = [];
-  var wholesalePrice, netProfit, sellingPrice, sellingPriceAfterObligation,netProfitAfterObligation;
+  var wholesalePrice,
+      netProfit,
+      sellingPrice,
+      sellingPriceAfterObligation,
+      netProfitAfterObligation;
   Color tableHeaderColor = Constants.tableHeaderColor;
   Color tableHeaderTitleColor = Constants.white;
   Color mostSoldProductColor = Constants.lightGreen;
@@ -25,11 +30,25 @@ class _DailyReportState extends State<DailyReport> {
   double tableContentFontSize = Constants.tableContentFontSize;
   double tableTitleFontSize = Constants.tableTitleFontSize;
   static const double paddingSize = Constants.padding;
-  String pickedDateValue = DateFormat('yyyy-MM-dd').format(DateTime.now()).toString();
+  String pickedDateValue =
+      DateFormat('yyyy-MM-dd').format(DateTime.now()).toString();
 
   @override
   void initState() {
     super.initState();
+    _initializeData();
+  }
+
+  int? _projectId;
+  Future<void> _loadUserInfo() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _projectId = prefs.getInt('project_id');
+    });
+  }
+
+  Future<void> _initializeData() async {
+    await _loadUserInfo();
     getSellingProductFormDate(pickedDateValue);
     getIMoneyData(pickedDateValue);
   }
@@ -40,15 +59,20 @@ class _DailyReportState extends State<DailyReport> {
       FROM sales
       INNER JOIN products ON sales.product_id = products.id 
       WHERE DATE(sales.created_at) = DATE('$date','localtime')
+      AND sales.project_id = $_projectId
+      AND products.project_id = $_projectId
       ''');
     setState(() {
-      sellingPrice = response.first['selling_price'] != null ?
-      response.first['selling_price'].toStringAsFixed(2) : "0";
-      sellingPriceAfterObligation =  sellingPrice;
-      wholesalePrice = response.first['wholesale_price'] != null ?
-      response.first['wholesale_price'].toStringAsFixed(2) : "0";
-      netProfit = response.first['net_profit'] != null ?
-      response.first['net_profit'].toStringAsFixed(2) : "0";
+      sellingPrice = response.first['selling_price'] != null
+          ? response.first['selling_price'].toStringAsFixed(2)
+          : "0";
+      sellingPriceAfterObligation = sellingPrice;
+      wholesalePrice = response.first['wholesale_price'] != null
+          ? response.first['wholesale_price'].toStringAsFixed(2)
+          : "0";
+      netProfit = response.first['net_profit'] != null
+          ? response.first['net_profit'].toStringAsFixed(2)
+          : "0";
       netProfitAfterObligation = netProfit;
     });
   }
@@ -59,7 +83,9 @@ class _DailyReportState extends State<DailyReport> {
         COUNT() AS number_of_selling
         FROM sales 
         INNER JOIN products ON sales.product_id = products.id 
-        WHERE DATE(sales.created_at) = Date('$date','localtime') 
+         WHERE sales.project_id = $_projectId
+            AND products.project_id = $_projectId
+            AND DATE(sales.created_at) = DATE('$date', 'localtime') 
         GROUP BY product_id 
         ORDER BY number_of_selling DESC
         ''');
@@ -76,11 +102,11 @@ class _DailyReportState extends State<DailyReport> {
       lastDate: DateTime.now(),
     );
 
-      setState(() {
-        pickedDateValue = pickedDate.toString().substring(0,10);
-        getIMoneyData(pickedDateValue);
-          getSellingProductFormDate(pickedDateValue);
-        });
+    setState(() {
+      pickedDateValue = pickedDate.toString().substring(0, 10);
+      getIMoneyData(pickedDateValue);
+      getSellingProductFormDate(pickedDateValue);
+    });
   }
 
   @override
@@ -99,7 +125,8 @@ class _DailyReportState extends State<DailyReport> {
                     Navigator.of(context).push(
                         MaterialPageRoute(builder: (context) => const Home()));
                   })),
-          body: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          body:
+              Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
             Expanded(
               child: SingleChildScrollView(
                 scrollDirection: Axis.vertical,
@@ -154,8 +181,7 @@ class _DailyReportState extends State<DailyReport> {
                             style: TextStyle(
                                 fontSize: tableTitleFontSize,
                                 fontWeight: FontWeight.bold))),
-                        DataCell(Text(
-                            sellingPrice.toString(),
+                        DataCell(Text(sellingPrice.toString(),
                             style: TextStyle(
                               fontSize: tableContentFontSize,
                             ))),
@@ -165,8 +191,7 @@ class _DailyReportState extends State<DailyReport> {
                             style: TextStyle(
                                 fontSize: tableContentFontSize,
                                 fontWeight: FontWeight.bold))),
-                        DataCell(Text(
-                            wholesalePrice.toString(),
+                        DataCell(Text(wholesalePrice.toString(),
                             style: TextStyle(
                               fontSize: tableContentFontSize,
                             ))),
@@ -176,8 +201,7 @@ class _DailyReportState extends State<DailyReport> {
                             style: TextStyle(
                                 fontSize: tableContentFontSize,
                                 fontWeight: FontWeight.bold))),
-                        DataCell(Text(
-                            netProfit.toString(),
+                        DataCell(Text(netProfit.toString(),
                             style: TextStyle(
                               fontSize: tableContentFontSize,
                             ))),
@@ -187,7 +211,7 @@ class _DailyReportState extends State<DailyReport> {
                             style: TextStyle(
                                 fontSize: tableContentFontSize,
                                 fontWeight: FontWeight.bold))),
-                         DataCell(
+                        DataCell(
                           Container(
                             width: 100,
                             margin: const EdgeInsets.only(top: 8, bottom: 8),
@@ -195,12 +219,20 @@ class _DailyReportState extends State<DailyReport> {
                               onChanged: (value) {
                                 setState(() {
                                   try {
-                                    sellingPriceAfterObligation = (double.parse(sellingPrice) - double.parse(value)).toStringAsFixed(2);
-                                    netProfitAfterObligation = (double.parse(netProfit) - double.parse(value)).toStringAsFixed(2);
+                                    sellingPriceAfterObligation =
+                                        (double.parse(sellingPrice) -
+                                                double.parse(value))
+                                            .toStringAsFixed(2);
+                                    netProfitAfterObligation =
+                                        (double.parse(netProfit) -
+                                                double.parse(value))
+                                            .toStringAsFixed(2);
                                   } catch (e) {
                                     // Handle the exception here, for example, set a default value
-                                    sellingPriceAfterObligation = double.parse(sellingPrice) - 0.0;
-                                    netProfitAfterObligation = double.parse(netProfit) - 0.0;
+                                    sellingPriceAfterObligation =
+                                        double.parse(sellingPrice) - 0.0;
+                                    netProfitAfterObligation =
+                                        double.parse(netProfit) - 0.0;
                                   }
                                 });
                               },
@@ -216,32 +248,31 @@ class _DailyReportState extends State<DailyReport> {
                       ]),
                       DataRow(
                           color: MaterialStateColor.resolveWith(
-                                  (states) => obligationValuesColor),
+                              (states) => obligationValuesColor),
                           cells: [
-                        DataCell(Text("total_selling_price".tr().toString(),
-                            style: TextStyle(
-                                fontSize: tableContentFontSize,
-                                fontWeight: FontWeight.bold))),
-                        DataCell(Text(
-                            sellingPriceAfterObligation.toString(),
-                            style: TextStyle(
-                              fontSize: tableContentFontSize,
-                            ))),
-                      ]),
+                            DataCell(Text("total_selling_price".tr().toString(),
+                                style: TextStyle(
+                                    fontSize: tableContentFontSize,
+                                    fontWeight: FontWeight.bold))),
+                            DataCell(
+                                Text(sellingPriceAfterObligation.toString(),
+                                    style: TextStyle(
+                                      fontSize: tableContentFontSize,
+                                    ))),
+                          ]),
                       DataRow(
                           color: MaterialStateColor.resolveWith(
-                                  (states) => obligationValuesColor),
+                              (states) => obligationValuesColor),
                           cells: [
-                        DataCell(Text("net_profit".tr().toString(),
-                            style: TextStyle(
-                                fontSize: tableContentFontSize,
-                                fontWeight: FontWeight.bold))),
-                        DataCell(Text(
-                            netProfitAfterObligation.toString(),
-                            style: TextStyle(
-                              fontSize: tableContentFontSize,
-                            ))),
-                      ]),
+                            DataCell(Text("net_profit".tr().toString(),
+                                style: TextStyle(
+                                    fontSize: tableContentFontSize,
+                                    fontWeight: FontWeight.bold))),
+                            DataCell(Text(netProfitAfterObligation.toString(),
+                                style: TextStyle(
+                                  fontSize: tableContentFontSize,
+                                ))),
+                          ]),
                       for (var index = 0;
                           index < sellingProducts.length;
                           index++)
